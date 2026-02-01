@@ -1,0 +1,4 @@
+SYNRIX Package: free_tier_10m
+Node Limit: 10000000
+DLL: libsynrix.dll
+Build Date: 2026-01-26 10:28:05

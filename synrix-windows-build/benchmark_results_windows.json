@@ -1,0 +1,46 @@
+{
+  "platform": "Windows (MSYS2 MinGW-w64)",
+  "dll": "libsynrix.dll",
+  "timestamp": 1768266698.103847,
+  "add_nodes": {
+    "count": 1000,
+    "total_time_ms": 17.969099804759026,
+    "avg_us": 17.849691677838564,
+    "median_us": 16.79966226220131,
+    "min_us": 14.899764209985733,
+    "max_us": 56.69984966516495,
+    "p95_us": 25.799963623285294,
+    "p99_us": 40.40030762553215,
+    "throughput_nodes_per_sec": 55651.09053126607
+  },
+  "get_nodes": {
+    "count": 1000,
+    "avg_us": 2.435008529573679,
+    "median_us": 2.400018274784088,
+    "p95_us": 2.600252628326416,
+    "p99_us": 3.8999132812023163,
+    "min_us": 2.0996667444705963,
+    "max_us": 8.600298315286636
+  },
+  "prefix_queries": {
+    "iterations": 100,
+    "avg_us": 2944.0129920840263,
+    "median_us": 2760.4501228779554,
+    "p95_us": 4229.199606925249,
+    "p99_us": 4519.499838352203,
+    "min_us": 2549.6999733150005,
+    "max_us": 4519.499838352203,
+    "results_per_query": 1000
+  },
+  "wal_operations": {
+    "flush_time_ms": 0.8533000946044922,
+    "checkpoint_time_ms": 18.472799565643072
+  },
+  "persistence": {
+    "save_time_ms": 11.96199981495738,
+    "load_time_ms": 8.649100083857775,
+    "nodes_before": 1000,
+    "nodes_after": 9,
+    "persistence_ok": false
+  }
+}

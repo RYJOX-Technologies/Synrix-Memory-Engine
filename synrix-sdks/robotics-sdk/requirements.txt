@@ -1,0 +1,10 @@
+# RoboticsNexus SDK Requirements
+# Python 3.8 or higher required
+# No external Python dependencies - uses native SYNRIX library
+
+# The SDK uses native DLLs (.dll on Windows) which are included in the package.
+# Windows users need to run install_dependencies.bat to install:
+# - Visual C++ 2013 Runtime
+# - zlib1.dll
+
+# See INSTALLATION.md for complete setup instructions.

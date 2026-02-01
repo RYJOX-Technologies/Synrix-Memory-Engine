@@ -1,0 +1,50 @@
+# Rename note: This is .gitignore for GitHub. Do not commit the private key or binaries.
+
+# === Secrets (never commit) ===
+synrix_license_private.key
+*.key
+.env
+.env.local
+*.pem
+
+# === Build outputs (keep build/windows/src, include, CMakeLists) ===
+**/build_msys2/
+**/build_free_tier_100k/
+**/build_license_test/
+**/build_unlimited/
+**/build/windows/build/
+*.obj
+*.o
+*.a
+*.pdb
+*.manifest
+Makefile
+CMakeCache.txt
+CMakeFiles/
+
+# === Binaries / artifacts (use GitHub Releases for zips) ===
+*.zip
+*.dll
+*.exe
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+.eggs/
+dist/
+*.manifest
+
+# === Lattice / runtime data ===
+*.lattice
+*.lattice.wal
+*.wal
+
+# === IDE / OS ===
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
