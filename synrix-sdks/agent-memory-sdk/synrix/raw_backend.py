@@ -191,13 +191,13 @@ class RawSynrixBackend:
         - No Python overhead, no serialization
     """
     
-    def __init__(self, lattice_path: str, max_nodes: int = 100000, device_id: int = 0, evaluation_mode: bool = True):
+    def __init__(self, lattice_path: str, max_nodes: int = 25000, device_id: int = 0, evaluation_mode: bool = True):
         """
         Initialize raw C backend.
         
         Args:
             lattice_path: Path to .lattice file (will create if doesn't exist)
-            max_nodes: Maximum nodes in RAM cache (default: 100k)
+            max_nodes: Maximum nodes in RAM cache (default: 25k)
             device_id: Device ID for distributed systems (0 = auto-assign)
             evaluation_mode: If False, disables 50k node limit (unlimited nodes)
         """

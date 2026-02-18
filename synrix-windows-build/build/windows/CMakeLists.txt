@@ -47,6 +47,7 @@ set(CORE_SOURCES
     src/checksum.c
     src/license_utils.c
     src/license_verify.c
+    src/license_global.c
     src/seqlock.c  # Required by WAL
     src/windows_compat.c  # Windows compatibility functions
 )
@@ -80,6 +81,7 @@ set(HEADERS
     include/integrity_validator.h
     include/intelligent_lattice_loader.h
     include/license_verify.h
+    include/license_global.h
 )
 
 # Create shared library (sources only, headers are included via include_directories)
@@ -177,3 +179,5 @@ install(TARGETS synrix synrix_cli
 )
 
 install(FILES ${HEADERS} DESTINATION include/synrix)
+
+

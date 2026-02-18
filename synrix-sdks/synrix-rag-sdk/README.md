@@ -7,7 +7,7 @@ This SDK provides RAG primitives (embeddings, search, persistence) backed by SYN
 It requires a SYNRIX engine: use the Agent Memory SDK with the engine DLL for local Windows,
 or a running Synrix server for other setups.
 
-For internal distribution we use the free tier (100k node limit) and provide
+For internal distribution we use the free tier (25k node limit) and provide
 upgrade instructions when the limit is reached.
 
 ## Requirements
@@ -36,7 +36,7 @@ from synrix_rag import rag_memory, embeddings
 ```
 
 ## Free tier limit
-When the 100k node limit is reached, the backend raises an error with upgrade
+When the 25k node limit is reached, the backend raises an error with upgrade
 instructions. Use a paid tier to remove the limit.
 
 ## License

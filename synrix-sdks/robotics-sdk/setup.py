@@ -1,5 +1,5 @@
 """
-Setup script for SYNRIX Free Tier Package (100k node limit)
+Setup script for SYNRIX Free Tier Package (25k node limit)
 """
 
 from setuptools import setup, find_packages
@@ -10,9 +10,9 @@ readme_file = Path(__file__).parent / "README.md"
 long_description = readme_file.read_text() if readme_file.exists() else ""
 
 setup(
-    name="synrix-free-tier-100k",
+    name="synrix-free-tier-25k",
     version="0.1.0",
-    description="SYNRIX Free Tier - AI Agent Memory System with Robotics SDK (100k node limit)",
+    description="SYNRIX Free Tier - AI Agent Memory System with Robotics SDK (25k node limit)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="SYNRIX Team",

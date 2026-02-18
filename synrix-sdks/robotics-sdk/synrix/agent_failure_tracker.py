@@ -68,9 +68,9 @@ def record_failure(error_type: str,
     try:
         # Create memory file if it doesn't exist
         if not os.path.exists(memory_path):
-            backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+            backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         else:
-            backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+            backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         
         # Build failure data
         failure_data = {
@@ -131,7 +131,7 @@ def get_failures_by_type(error_type: str, memory_path: Optional[str] = None) -> 
     
     backend = None
     try:
-        backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+        backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         failures = backend.find_by_prefix(f"FAILURE:{error_type}", limit=100)
         
         result = []
@@ -176,7 +176,7 @@ def get_all_failures(memory_path: Optional[str] = None, limit: int = 50) -> list
     
     backend = None
     try:
-        backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+        backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         failures = backend.find_by_prefix("FAILURE:", limit=limit)
         
         result = []

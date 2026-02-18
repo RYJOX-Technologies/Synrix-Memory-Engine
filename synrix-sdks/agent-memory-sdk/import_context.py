@@ -29,7 +29,7 @@ def import_context(json_file):
     
     # Initialize Windows SYNRIX (will create new lattice if needed)
     memory_path = os.path.expanduser("~/.cursor_ai_memory.lattice")
-    memory = RawSynrixBackend(memory_path, max_nodes=100000)
+    memory = RawSynrixBackend(memory_path, max_nodes=25000)
     
     # Load JSON export
     with open(json_file, 'r', encoding='utf-8') as f:

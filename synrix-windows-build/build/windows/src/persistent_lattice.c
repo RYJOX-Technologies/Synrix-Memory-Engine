@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "persistent_lattice.h"
 #include "license_verify.h"
+#include "license_global.h"
 #include "wal.h"
 #include "isolation.h"
 #include "lattice_constraints.h"
@@ -66,12 +67,14 @@ int lattice_init(persistent_lattice_t* lattice, const char* storage_path, uint32
         lattice->free_tier_limit = 25000;  // Default 25k node limit for free tier
     #endif
     {
+        lattice->license_verified_unlimited = false;
         uint32_t license_limit = 0;
         int license_unlimited = 0;
         if (synrix_license_parse(NULL, &license_limit, &license_unlimited) == 0) {
             if (license_unlimited) {
                 lattice->evaluation_mode = false;
                 lattice->free_tier_limit = 0;  /* unlimited */
+                lattice->license_verified_unlimited = true;
             } else {
                 lattice->evaluation_mode = true;
                 lattice->free_tier_limit = license_limit;
@@ -178,7 +181,12 @@ int lattice_init(persistent_lattice_t* lattice, const char* storage_path, uint32
         lattice->total_nodes = 0;
         lattice->dirty = false;
     }
-    
+
+    /* Global license usage: register this lattice's node count (one cap per license per machine) */
+    if (lattice->evaluation_mode && lattice->free_tier_limit > 0 && lattice->total_nodes > 0) {
+        (void)license_global_register(lattice->total_nodes, lattice->free_tier_limit);
+    }
+
     // Build semantic prefix index after loading (O(n) once, then O(k) queries)
     // Only build if we have nodes to index
     if (lattice->node_count > 0) {
@@ -1752,7 +1760,27 @@ uint64_t lattice_add_node(persistent_lattice_t* lattice, lattice_node_type_t typ
     //            lattice->wal->enabled, lattice->wal->wal_fd, 
     //            (unsigned long long)lattice->wal->sequence);
     // }
-    
+
+    /* Global license usage: one cap per license per machine (deny add if over limit) */
+    if (lattice->evaluation_mode && lattice->free_tier_limit > 0) {
+        if (license_global_add_one(lattice->free_tier_limit) != 0) {
+            lattice->last_error = LATTICE_ERROR_FREE_TIER_LIMIT;
+            fprintf(stderr,
+                "\n"
+                "====================================================================\n"
+                "  SYNRIX: Free Tier Limit Reached (global)\n"
+                "====================================================================\n"
+                "\n"
+                "  You've reached the free tier limit of %u nodes across all lattices.\n"
+                "  No new nodes can be added.\n"
+                "\n"
+                "====================================================================\n\n",
+                lattice->free_tier_limit);
+            fflush(stderr);
+            return 0;
+        }
+    }
+
     // FREE TIER LIMIT ENFORCEMENT (Phase 1: Evaluation Mode)
     // Check BEFORE memory allocation to prevent OOM on small devices
     // Check if adding THIS node would exceed the limit (total_nodes will be incremented AFTER this check)
@@ -1802,7 +1830,28 @@ uint64_t lattice_add_node_with_id(persistent_lattice_t* lattice, uint32_t reserv
                                   lattice_node_type_t type, const char* name, 
                                   const char* data, uint64_t parent_id) {
     if (!lattice) return 0;
-    
+
+
+    /* Global license usage: one cap per license per machine (deny add if over limit) */
+    if (lattice->evaluation_mode && lattice->free_tier_limit > 0) {
+        if (license_global_add_one(lattice->free_tier_limit) != 0) {
+            lattice->last_error = LATTICE_ERROR_FREE_TIER_LIMIT;
+            fprintf(stderr,
+                "\n"
+                "====================================================================\n"
+                "  SYNRIX: Free Tier Limit Reached (global)\n"
+                "====================================================================\n"
+                "\n"
+                "  You've reached the free tier limit of %u nodes across all lattices.\n"
+                "  No new nodes can be added.\n"
+                "\n"
+                "====================================================================\n\n",
+                lattice->free_tier_limit);
+            fflush(stderr);
+            return 0;
+        }
+    }
+
     // FREE TIER LIMIT ENFORCEMENT (Phase 1: Evaluation Mode)
     // Check if adding THIS node would exceed the limit
     if (lattice->evaluation_mode && (lattice->total_nodes + 1) > lattice->free_tier_limit) {
@@ -1959,6 +2008,26 @@ uint64_t lattice_add_node_compressed(persistent_lattice_t* lattice, lattice_node
                                      uint64_t parent_id) {
     if (!lattice || !name || !compressed_data || compressed_data_len == 0) return 0;
     
+
+    /* Global license usage: one cap per license per machine (deny add if over limit) */
+    if (lattice->evaluation_mode && lattice->free_tier_limit > 0) {
+        if (license_global_add_one(lattice->free_tier_limit) != 0) {
+            lattice->last_error = LATTICE_ERROR_FREE_TIER_LIMIT;
+            fprintf(stderr,
+                "\n"
+                "====================================================================\n"
+                "  SYNRIX: Free Tier Limit Reached (global)\n"
+                "====================================================================\n"
+                "\n"
+                "  You've reached the free tier limit of %u nodes across all lattices.\n"
+                "  No new nodes can be added.\n"
+                "\n"
+                "====================================================================\n\n",
+                lattice->free_tier_limit);
+            fflush(stderr);
+            return 0;
+        }
+    }
     // FREE TIER LIMIT ENFORCEMENT (Phase 1: Evaluation Mode)
     // Check if adding THIS node would exceed the limit
     if (lattice->evaluation_mode && (lattice->total_nodes + 1) > lattice->free_tier_limit) {
@@ -2157,7 +2226,28 @@ uint64_t lattice_add_node_binary(persistent_lattice_t* lattice, lattice_node_typ
                                  const char* name, const void* data, size_t data_len, uint64_t parent_id) {
     // Validate input
     if (!lattice) return 0;
-    
+
+
+    /* Global license usage: one cap per license per machine (deny add if over limit) */
+    if (lattice->evaluation_mode && lattice->free_tier_limit > 0) {
+        if (license_global_add_one(lattice->free_tier_limit) != 0) {
+            lattice->last_error = LATTICE_ERROR_FREE_TIER_LIMIT;
+            fprintf(stderr,
+                "\n"
+                "====================================================================\n"
+                "  SYNRIX: Free Tier Limit Reached (global)\n"
+                "====================================================================\n"
+                "\n"
+                "  You've reached the free tier limit of %u nodes across all lattices.\n"
+                "  No new nodes can be added.\n"
+                "\n"
+                "====================================================================\n\n",
+                lattice->free_tier_limit);
+            fflush(stderr);
+            return 0;
+        }
+    }
+
     // FREE TIER LIMIT ENFORCEMENT (Phase 1: Evaluation Mode)
     // Check if adding THIS node would exceed the limit
     if (lattice->evaluation_mode && (lattice->total_nodes + 1) > lattice->free_tier_limit) {
@@ -6330,11 +6420,24 @@ int lattice_update_node_with_isolation(persistent_lattice_t* lattice, uint64_t i
     return result;
 }
 
-// Disable evaluation mode (unlimited nodes) - for production/creator use
+// Set license key (base64). Verifies signature and sets tier limit. Returns 0 on success, -1 if invalid.
+int lattice_set_license_key(persistent_lattice_t* lattice, const char* license_key_base64) {
+    if (!lattice || !license_key_base64) return -1;
+    uint32_t limit = 0;
+    int unlimited = 0;
+    if (synrix_license_parse(license_key_base64, &limit, &unlimited) != 0) return -1;
+    lattice->free_tier_limit = unlimited ? 0 : limit;
+    lattice->evaluation_mode = (unlimited == 0);
+    lattice->license_verified_unlimited = (unlimited != 0);
+    return 0;
+}
+
+// Disable evaluation mode (unlimited nodes). Only succeeds if a valid unlimited (tier-4) key was set.
 int lattice_disable_evaluation_mode(persistent_lattice_t* lattice) {
     if (!lattice) return -1;
+    if (!lattice->license_verified_unlimited) return -1;  /* only allow when verified unlimited key */
     lattice->evaluation_mode = false;
-    lattice->free_tier_limit = 0;  // 0 = unlimited
+    lattice->free_tier_limit = 0;
     return 0;
 }
 
@@ -6366,3 +6469,7 @@ int lattice_add_child_with_isolation(persistent_lattice_t* lattice, uint64_t par
     
     return result;
 }
+
+
+
+

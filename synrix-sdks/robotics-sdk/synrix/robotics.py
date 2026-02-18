@@ -92,12 +92,12 @@ class RoboticsNexus:
         
         Args:
             robot_id: Unique identifier for this robot
-            memory: Optional SYNRIX memory instance (default: creates new with 100k limit)
+            memory: Optional SYNRIX memory instance (default: creates new with 25k limit)
         
         Example:
             >>> robot = RoboticsNexus(robot_id="robot_001")
         
-        Note: RoboticsNexus uses the 100k node limit (free tier) to encourage upgrades.
+        Note: RoboticsNexus uses the 25k node limit (free tier) to encourage upgrades.
         """
         self.robot_id = robot_id
         self.memory = memory or get_ai_memory()

@@ -3,6 +3,8 @@
 # === Secrets (never commit) ===
 synrix_license_private.key
 *.key
+PASSWORD_FOR_JOSEPH.txt
+key_for_joseph.zip
 .env
 .env.local
 *.pem

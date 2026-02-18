@@ -206,6 +206,7 @@ uint64_t lattice_create_concept_version(persistent_lattice_t* lattice,
                  next_version_num,
                  reason ? reason : "new_version");
         strncpy(new_node->data, version_data, sizeof(new_node->data) - 1);
+        new_node->data[sizeof(new_node->data) - 1] = '\0';
     }
     
     // Mark previous version as historical
@@ -592,7 +593,9 @@ uint32_t lattice_get_historical_versions(persistent_lattice_t* lattice,
     
     // Get base name (without any version prefix)
     char base_name[64];
+    base_name[0] = '\0';
     strncpy(base_name, current_node->name, sizeof(base_name) - 1);
+    base_name[sizeof(base_name) - 1] = '\0';
     
     // Find all historical versions
     uint32_t count = 0;

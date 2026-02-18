@@ -89,7 +89,7 @@ def restore_agent_context(memory_path: Optional[str] = None,
     
     backend = None
     try:
-        backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+        backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         
         # Load constraints (all of them)
         constraints = backend.find_by_prefix("CONSTRAINT:", limit=200, raw=True)  # AI-first: use bytes
@@ -250,7 +250,7 @@ def find_by_tag(tag: str, memory_path: Optional[str] = None, limit: int = 50) ->
     
     backend = None
     try:
-        backend = RawSynrixBackend(memory_path, max_nodes=100000, evaluation_mode=False)
+        backend = RawSynrixBackend(memory_path, max_nodes=25000, evaluation_mode=True)
         
         # Query TAG_INDEX nodes
         normalized_tag = tag.lower().strip().replace(' ', '_')

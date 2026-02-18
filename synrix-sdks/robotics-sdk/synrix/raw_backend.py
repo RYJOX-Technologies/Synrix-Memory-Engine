@@ -188,13 +188,13 @@ class RawSynrixBackend:
         - No Python overhead, no serialization
     """
     
-    def __init__(self, lattice_path: str, max_nodes: int = 100000, device_id: int = 0, evaluation_mode: bool = True):
+    def __init__(self, lattice_path: str, max_nodes: int = 25000, device_id: int = 0, evaluation_mode: bool = True):
         """
         Initialize raw C backend.
         
         Args:
             lattice_path: Path to .lattice file (will create if doesn't exist)
-            max_nodes: Maximum nodes in RAM cache (default: 100k)
+            max_nodes: Maximum nodes in RAM cache (default: 25k)
             device_id: Device ID for distributed systems (0 = auto-assign)
             evaluation_mode: If False, disables 50k node limit (unlimited nodes)
         """
@@ -474,7 +474,7 @@ class RawSynrixBackend:
             )
             if error_code == -100:  # LATTICE_ERROR_FREE_TIER_LIMIT
                 raise FreeTierLimitError(
-                    "SYNRIX: Free Tier limit reached (100,000 nodes). "
+                    "SYNRIX: Free Tier limit reached (25,000 nodes). "
                     "No new nodes can be added to the lattice. "
                     "Options: Delete existing nodes to free space, upgrade to Pro tier for unlimited nodes at synrix.io, or contact support for assistance."
                 )
@@ -522,7 +522,7 @@ class RawSynrixBackend:
             )
             if error_code == -100:  # LATTICE_ERROR_FREE_TIER_LIMIT
                 raise FreeTierLimitError(
-                    "SYNRIX: Free Tier limit reached (100,000 nodes). "
+                    "SYNRIX: Free Tier limit reached (25,000 nodes). "
                     "No new nodes can be added to the lattice. "
                     "Options: Delete existing nodes to free space, upgrade to Pro tier for unlimited nodes at synrix.io, or contact support for assistance."
                 )
@@ -568,7 +568,7 @@ class RawSynrixBackend:
             )
             if error_code == -100:  # LATTICE_ERROR_FREE_TIER_LIMIT
                 raise FreeTierLimitError(
-                    "SYNRIX: Free Tier limit reached (100,000 nodes). "
+                    "SYNRIX: Free Tier limit reached (25,000 nodes). "
                     "No new nodes can be added to the lattice. "
                     "Options: Delete existing nodes to free space, upgrade to Pro tier for unlimited nodes at synrix.io, or contact support for assistance."
                 )
@@ -840,7 +840,7 @@ class RawSynrixBackend:
         # Count nodes by querying all (empty prefix gets all)
         all_nodes = self.find_by_prefix("", limit=30000)
         current = len(all_nodes)
-        limit = 100000  # Free tier limit (100k nodes)
+        limit = 25000  # Free tier limit (25k nodes)
         percentage = round((current / limit) * 100) if limit > 0 else 0
         remaining = max(0, limit - current)
         

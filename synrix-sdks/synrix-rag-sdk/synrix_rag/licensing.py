@@ -12,7 +12,7 @@ from enum import Enum
 
 # Pricing tiers
 class PricingTier(Enum):
-    FREE = {"limit": 100_000, "price": 0, "name": "Free"}
+    FREE = {"limit": 25_000, "price": 0, "name": "Free"}
     STARTER = {"limit": 1_000_000, "price": 99, "name": "Starter"}
     PRO = {"limit": 10_000_000, "price": 299, "name": "Pro"}
     ENTERPRISE = {"limit": 50_000_000, "price": 499, "name": "Enterprise"}
@@ -83,7 +83,7 @@ class LicenseManager:
             else:
                 # Fallback: query all and count
                 try:
-                    all_nodes = synrix_memory.query("", limit=1000000)
+                    all_nodes = synrix_memory.query("", limit=30000)
                     actual_count = len(all_nodes) if isinstance(all_nodes, list) else 0
                 except:
                     actual_count = self.usage.get("node_count", 0)

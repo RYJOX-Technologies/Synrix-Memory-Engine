@@ -271,6 +271,7 @@ typedef struct {
     lattice_error_code_t last_error;  // Last error code
     bool evaluation_mode;              // True if running in evaluation/free tier mode
     uint32_t free_tier_limit;         // Free tier node limit (default: 25000)
+    bool license_verified_unlimited;  // True only when a valid tier-4 key was set at init/set_license_key
 } persistent_lattice_t;
 
 // Function declarations
@@ -655,7 +656,10 @@ void lattice_get_cache_stats(persistent_lattice_t* lattice,
                             uint32_t* cache_hits,
                             uint32_t* cache_misses);
 
-// Disable evaluation mode (unlimited nodes for developer/creator use)
+// Set license key (base64). Verifies Ed25519 signature and sets tier limit. Returns 0 on success, -1 if invalid.
+int lattice_set_license_key(persistent_lattice_t* lattice, const char* license_key_base64);
+
+// Disable evaluation mode (unlimited nodes). Only succeeds if a valid unlimited (tier-4) key was set.
 int lattice_disable_evaluation_mode(persistent_lattice_t* lattice);
 
 #ifdef __cplusplus

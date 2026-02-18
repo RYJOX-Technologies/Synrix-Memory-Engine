@@ -4,7 +4,7 @@ Python SDK for SYNRIX agent memory (local, deterministic, persistent).
 
 ## What this is
 This SDK is the Python client library. It requires the SYNRIX engine DLL.
-For internal distribution, we use the free tier (100k node limit) and
+For internal distribution, we use the free tier (25k node limit) and
 provide upgrade instructions when the limit is reached.
 
 ## Requirements
@@ -30,7 +30,7 @@ Option B: set an explicit DLL path
 set SYNRIX_LIB_PATH=C:\path\to\libsynrix.dll
 ```
 
-Tier (100k / 1M / 10M / 50M / unlimited) is set by `SYNRIX_LICENSE_KEY`. No key = default cap (e.g. 25k). See LICENSE_SIGNED_KEY.md in the build folder.
+Tier (25k / 1M / 10M / 50M / unlimited) is set by `SYNRIX_LICENSE_KEY`. No key = default cap (25k). See LICENSE_SIGNED_KEY.md in the build folder.
 
 3) Use the SDK
 ```python

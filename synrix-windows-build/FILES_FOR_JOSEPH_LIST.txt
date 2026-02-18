@@ -1,0 +1,32 @@
+# All files to send Joseph (ready to integrate)
+
+## 1. Joseph pack (docs for his database / flows)
+
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\USER_JOURNEY_AND_FLOW.md
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\RESPONSE_TO_JOSEPH.md
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\SUMMARY_FOR_JOSEPH.md
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\FOR_JOSEPH_PACK.md
+
+## 2. License key format / keygen (for his integration)
+
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\build\windows\LICENSE_SIGNED_KEY.md
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\build\windows\tools\synrix_license_keygen.py
+
+(Private key synrix_license_private.key stays with you – do not send. He only needs to know: we run keygen, get one line, store it and send to customer.)
+
+## 3. What customers download (release asset)
+
+C:\Users\Livew\Desktop\synrix-windows-build\synrix-windows-build\packages\synrix-windows.zip
+
+(Same zip for everyone; tier set by key we send them.)
+
+## 4. Repo (if he needs source)
+
+The whole repo is already on GitHub. He can clone it. The docs above are in synrix-windows-build/.
+
+---
+Quick zip of just the 4 Joseph docs (PowerShell, run from synrix-windows-build folder):
+
+  Compress-Archive -Path USER_JOURNEY_AND_FLOW.md, RESPONSE_TO_JOSEPH.md, SUMMARY_FOR_JOSEPH.md, FOR_JOSEPH_PACK.md -DestinationPath Joseph_pack.zip -Force
+
+Then send Joseph_pack.zip + synrix-windows.zip (if he needs to host/distribute the customer download).

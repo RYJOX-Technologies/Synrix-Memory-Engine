@@ -31,7 +31,7 @@ terms apply to that code.
 Native engine and binaries (including but not limited to libsynrix*.dll,
 synrix-server, and related executables) are proprietary to RYJOX Technologies.
 - Free to use for evaluation and development under the published free-tier
-  (e.g. 100k node limit).
+  (e.g. 25k node limit).
 - Production or higher-tier use requires a commercial license.
 - Protected by copyright, trade secrets, and patent-pending where applicable.
 

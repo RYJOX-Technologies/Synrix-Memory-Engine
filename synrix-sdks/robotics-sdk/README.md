@@ -4,7 +4,7 @@ Python SDK for robotics memory on SYNRIX: sensor data, robot state, action loggi
 
 ## What this is
 This SDK is the robotics memory client. It requires the SYNRIX engine DLL (same as the Agent Memory SDK).
-For internal distribution we use the free tier (100k node limit) and provide upgrade instructions when the limit is reached.
+For internal distribution we use the free tier (25k node limit) and provide upgrade instructions when the limit is reached.
 
 ## Requirements
 - Windows 10+
@@ -41,7 +41,7 @@ state = robot.get_state()
 ```
 
 ## Free tier limit
-When the 100k node limit is reached, the SDK raises an error with upgrade instructions. Use a paid tier to remove the limit.
+When the 25k node limit is reached, the SDK raises an error with upgrade instructions. Use a paid tier to remove the limit.
 
 ## Examples
 See `examples/` for quickstart and usage.

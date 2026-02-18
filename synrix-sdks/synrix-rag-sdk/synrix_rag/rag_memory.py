@@ -234,7 +234,27 @@ class RAGMemory:
         # Initialize license manager (after synrix_memory is set)
         license_key = kwargs.get("license_key") or os.getenv("SYNRIX_RAG_LICENSE_KEY")
         self.license_manager = LicenseManager(license_key=license_key)
-    
+
+        # Report usage to backend on startup (fire-and-forget) for warning emails
+        if license_key and not self._use_fallback:
+            try:
+                from synrix_rag.usage_report import report_usage_to_backend
+                import threading
+                import hashlib
+                inst_id = hashlib.sha256((self.collection_name or "default").encode()).hexdigest()[:16]
+                def _report():
+                    try:
+                        current = self.license_manager.get_current_node_count(self.synrix_memory)
+                        hwid = None
+                        if hasattr(self.synrix_memory, "backend") and hasattr(self.synrix_memory.backend, "get_hardware_id"):
+                            hwid = self.synrix_memory.backend.get_hardware_id()
+                        report_usage_to_backend(license_key, current, hwid, inst_id)
+                    except Exception:
+                        pass
+                threading.Thread(target=_report, daemon=True).start()
+            except Exception:
+                pass
+
     def add_document(
         self,
         doc_id: Optional[str] = None,

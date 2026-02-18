@@ -30,7 +30,7 @@ except ImportError:
 class AgentAutoSave:
     """Automatically saves agent actions to SYNRIX"""
     
-    def __init__(self, lattice_path: Optional[str] = None, max_nodes: int = 1000000):
+    def __init__(self, lattice_path: Optional[str] = None, max_nodes: int = 25000):
         """
         Initialize auto-save helper.
         

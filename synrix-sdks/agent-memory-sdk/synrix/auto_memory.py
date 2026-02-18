@@ -53,9 +53,34 @@ def get_ai_memory() -> RawSynrixBackend:
             )
         
         memory_path = os.path.expanduser("~/.cursor_ai_memory.lattice")
-        _ai_memory = RawSynrixBackend(memory_path, max_nodes=100000)
+        _ai_memory = RawSynrixBackend(memory_path, max_nodes=25000)
+
+        # Usage reporting to backend (fire-and-forget) when license key is set
+        _report_usage_on_startup(_ai_memory, memory_path)
     
     return _ai_memory
+
+
+def _report_usage_on_startup(backend: "RawSynrixBackend", lattice_path: Optional[str] = None) -> None:
+    """Report node count to backend if SYNRIX_LICENSE_KEY is set (daemon thread)."""
+    license_key = os.environ.get("SYNRIX_LICENSE_KEY") or os.environ.get("SYNRIX_RAG_LICENSE_KEY")
+    if not license_key:
+        return
+    try:
+        from .usage_report import report_usage_to_backend
+        import threading
+        import hashlib
+        inst_id = hashlib.sha256((lattice_path or "").encode()).hexdigest()[:16] if lattice_path else None
+        def _do():
+            try:
+                count = len(backend.find_by_prefix("", limit=1_000_000))
+                hwid = backend.get_hardware_id() if hasattr(backend, "get_hardware_id") else None
+                report_usage_to_backend(license_key, count, hwid, inst_id)
+            except Exception:
+                pass
+        threading.Thread(target=_do, daemon=True).start()
+    except Exception:
+        pass
 
 
 class AIMemoryHelper:

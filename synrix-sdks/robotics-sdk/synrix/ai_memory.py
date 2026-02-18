@@ -49,7 +49,7 @@ class AIMemory:
         
         if USE_RAW_BACKEND:
             # Use direct DLL access (faster, more reliable)
-            self.backend = RawSynrixBackend(self.lattice_path, max_nodes=100000, evaluation_mode=True)
+            self.backend = RawSynrixBackend(self.lattice_path, max_nodes=25000, evaluation_mode=True)
             self.cli_path = None
         else:
             # Fallback to CLI
@@ -231,7 +231,7 @@ class AIMemory:
         """
         if USE_RAW_BACKEND and self.backend:
             try:
-                results = self.backend.find_by_prefix("", limit=100000)
+                results = self.backend.find_by_prefix("", limit=30000)
                 return len(results)
             except Exception:
                 return 0
