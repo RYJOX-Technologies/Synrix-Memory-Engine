@@ -206,6 +206,12 @@ class RawSynrixBackend:
             device_id: Device ID for distributed systems (0 = auto-assign)
             evaluation_mode: If False, disables evaluation mode (unlimited nodes)
         """
+        # One-time activation: if backend says key already used, clear it before engine reads it
+        try:
+            from .license_activate import ensure_license_activated
+            ensure_license_activated()
+        except Exception:
+            pass
         # Suppress debug output from DLL during initialization (skip if SYNRIX_DEBUG=1 to see C stderr)
         import os
         import sys

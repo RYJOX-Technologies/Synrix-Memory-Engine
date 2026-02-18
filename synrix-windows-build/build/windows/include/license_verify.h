@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 /* Signed license verification (Ed25519).
- * Key format: base64(payload || signature), payload = version(1) tier(1) expiry(4).
- * Tier: 0=100k, 1=1m, 2=10m, 3=50m, 4=unlimited.
+ * Key format: base64(payload || signature).
+ * Legacy: payload = version(1) tier(1) expiry(4) = 6 bytes. Unique: + nonce(8) = 14 bytes.
+ * Tier: 0=25k(starter), 1=1m(indie), 2=10m(growth), 3=50m(business), 4=unlimited(scale).
  * Engine reads SYNRIX_LICENSE_KEY from environment; if valid, overrides tier at init.
  */
 

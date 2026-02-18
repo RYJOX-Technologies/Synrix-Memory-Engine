@@ -191,13 +191,19 @@ class RawSynrixBackend:
     def __init__(self, lattice_path: str, max_nodes: int = 100000, device_id: int = 0, evaluation_mode: bool = True):
         """
         Initialize raw C backend.
-        
+
         Args:
             lattice_path: Path to .lattice file (will create if doesn't exist)
             max_nodes: Maximum nodes in RAM cache (default: 100k)
             device_id: Device ID for distributed systems (0 = auto-assign)
             evaluation_mode: If False, disables 50k node limit (unlimited nodes)
         """
+        # One-time activation: if backend says key already used, clear it before engine reads it
+        try:
+            from .license_activate import ensure_license_activated
+            ensure_license_activated()
+        except Exception:
+            pass
         # Suppress debug output from DLL during initialization
         import os
         import sys

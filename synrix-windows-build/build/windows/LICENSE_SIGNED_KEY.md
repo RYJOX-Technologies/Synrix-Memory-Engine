@@ -40,7 +40,13 @@ python tools/synrix_license_keygen.py --tier 50m --private synrix_license_privat
 python tools/synrix_license_keygen.py --tier unlimited --private synrix_license_private.key
 ```
 
-Each command prints one line: the license key (base64). Send that to the customer.
+Each command prints one line: the license key (base64). Send that to the customer. **Each key is unique** (8-byte nonce); issuing the same tier twice gives two different keys, so you can give different keys to different customers.
+
+Optional: bind a key to a customer id (for your records; engine does not validate it):
+
+```bash
+python tools/synrix_license_keygen.py --tier 1m --customer-id "jrob@example.com" --private synrix_license_private.key
+```
 
 Optional: set an expiry (Unix timestamp; 0 = no expiry):
 

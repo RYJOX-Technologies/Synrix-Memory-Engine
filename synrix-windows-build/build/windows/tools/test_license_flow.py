@@ -13,16 +13,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Payload format: version(1) tier(1) expiry(4) = 6 bytes. Tier: 0=100k, 1=1m, 2=10m, 3=50m, 4=unlimited
+# Payload: legacy 6 bytes or unique 14 bytes (version tier expiry [nonce]). Tier: 0=25k/100k, 1=1m, 2=10m, 3=50m, 4=unlimited
 TIER_NAMES = ["100k", "1m", "10m", "50m", "unlimited"]
 TIER_LIMITS = [100_000, 1_000_000, 10_000_000, 50_000_000, 0]
 
 
 def test_key_format(key_b64: str, expected_tier_index: int) -> bool:
-    """Decode key and check payload format and tier (no crypto verify)."""
+    """Decode key and check payload format and tier (no crypto verify). Accepts legacy 70-byte or unique 78-byte keys."""
     raw = base64.b64decode(key_b64)
-    if len(raw) != 6 + 64:  # payload + Ed25519 sig
-        print(f"  FAIL: key raw length {len(raw)} != 70")
+    if len(raw) not in (6 + 64, 14 + 64):
+        print(f"  FAIL: key raw length {len(raw)} not in (70, 78)")
         return False
     payload = raw[:6]
     version, tier, expiry = struct.unpack("<BBI", payload)
@@ -32,7 +32,8 @@ def test_key_format(key_b64: str, expected_tier_index: int) -> bool:
     if tier != expected_tier_index:
         print(f"  FAIL: tier {tier} != expected {expected_tier_index}")
         return False
-    print(f"  OK: version=1 tier={TIER_NAMES[tier]} expiry={expiry}")
+    kind = "unique (14-byte)" if len(raw) == 78 else "legacy (6-byte)"
+    print(f"  OK: version=1 tier={TIER_NAMES[tier]} expiry={expiry} {kind}")
     return True
 
 
