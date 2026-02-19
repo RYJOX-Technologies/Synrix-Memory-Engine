@@ -26,6 +26,7 @@ from pathlib import Path
 # Global flag to prevent multiple loads
 _loaded = False
 _lib = None
+_loaded_path = None  # absolute path of loaded DLL (for debugging)
 
 
 def load_synrix():
@@ -43,7 +44,7 @@ def load_synrix():
     Raises:
         OSError: If the library cannot be found or loaded
     """
-    global _loaded, _lib
+    global _loaded, _lib, _loaded_path
     
     # Reset if previous load failed
     if _loaded and _lib is None:
@@ -93,6 +94,7 @@ def load_synrix():
             try:
                 _lib = ctypes.WinDLL(str(lib_path))
                 _loaded = True
+                _loaded_path = str(lib_path.resolve())
                 return _lib
             except OSError as e:
                 # Store error for better diagnostics
@@ -104,6 +106,7 @@ def load_synrix():
             try:
                 _lib = ctypes.CDLL(str(lib_path))
                 _loaded = True
+                _loaded_path = str(lib_path.resolve())
                 return _lib
             except OSError as e:
                 # Try next library name
@@ -120,6 +123,7 @@ def load_synrix():
             else:
                 _lib = ctypes.CDLL(str(lib_path))
             _loaded = True
+            _loaded_path = str(lib_path.resolve())
             return _lib
     
     # Library not found

@@ -111,7 +111,7 @@ def _find_synrix_lib():
         search_paths.extend([
             f"./{lib_name}",
             lib_name,
-                os.path.join(os.environ.get("ProgramFiles", "C:\\Program Files"), "synrix", "bin", lib_name),
+            os.path.join(os.environ.get("ProgramFiles", "C:\\Program Files"), "synrix", "bin", lib_name),
         ])
     else:
         search_paths.extend([
@@ -120,11 +120,11 @@ def _find_synrix_lib():
             "/usr/local/lib/" + lib_name,
             "/usr/lib/" + lib_name,
         ])
-        
-        # Try all paths for this library name
-        for path in search_paths:
-            if os.path.exists(path):
-                return path
+    
+    # Try all paths for this library name (must run on both Windows and Linux)
+    for path in search_paths:
+        if os.path.exists(path):
+            return path
     
     # None of the library names found
     return None
@@ -214,6 +214,7 @@ class RawSynrixBackend:
         self.lattice_path = lattice_path
         self.lib = None
         self.lattice_ptr = None
+        self._lib_path = ""  # set by _load_library; which DLL was loaded (for debugging)
         self._load_library()
         self._init_lattice(max_nodes, device_id, evaluation_mode)
         
@@ -230,6 +231,11 @@ class RawSynrixBackend:
         if _NATIVE_LOADER_AVAILABLE:
             try:
                 self.lib = load_synrix()
+                try:
+                    mod = sys.modules.get("synrix._native")
+                    self._lib_path = getattr(mod, "_loaded_path", None) or ""
+                except Exception:
+                    self._lib_path = ""
                 # Define function signatures
                 self._setup_function_signatures()
                 return
@@ -255,6 +261,7 @@ class RawSynrixBackend:
         
         try:
             self.lib = ctypes.CDLL(lib_path)
+            self._lib_path = os.path.abspath(lib_path)
         except OSError as e:
             raise RuntimeError(f"Failed to load SYNRIX library from {lib_path}: {e}")
         

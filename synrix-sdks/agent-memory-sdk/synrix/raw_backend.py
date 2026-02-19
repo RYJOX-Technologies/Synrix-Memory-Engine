@@ -217,6 +217,7 @@ class RawSynrixBackend:
         self.lattice_path = lattice_path
         self.lib = None
         self.lattice_ptr = None
+        self._lib_path = ""  # set by _load_library; which DLL was loaded (for debugging)
         self._load_library()
         self._init_lattice(max_nodes, device_id, evaluation_mode)
         
@@ -233,6 +234,11 @@ class RawSynrixBackend:
         if _NATIVE_LOADER_AVAILABLE:
             try:
                 self.lib = load_synrix()
+                try:
+                    mod = sys.modules.get("synrix._native")
+                    self._lib_path = getattr(mod, "_loaded_path", None) or ""
+                except Exception:
+                    self._lib_path = ""
                 # Define function signatures
                 self._setup_function_signatures()
                 return
@@ -258,6 +264,7 @@ class RawSynrixBackend:
         
         try:
             self.lib = ctypes.CDLL(lib_path)
+            self._lib_path = os.path.abspath(lib_path)
         except OSError as e:
             raise RuntimeError(f"Failed to load SYNRIX library from {lib_path}: {e}")
         
