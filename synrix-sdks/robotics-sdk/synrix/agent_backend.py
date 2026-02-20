@@ -6,7 +6,6 @@ This module provides the most robust, direct access to SYNRIX for AI agents.
 It automatically detects and uses the best available backend:
 1. Direct shared memory (fastest, if server running)
 2. HTTP client (fallback)
-3. Mock client (for testing)
 
 Usage in Cursor AI:
     from synrix.agent_backend import get_synrix_backend
@@ -26,7 +25,6 @@ except ImportError:
     SynrixDirectClient = None
     DIRECT_CLIENT_AVAILABLE = False
 from .client import SynrixClient
-from .mock import SynrixMockClient
 
 
 class SynrixAgentBackend:
@@ -36,12 +34,10 @@ class SynrixAgentBackend:
     Automatically selects the best available backend:
     - Direct shared memory (if server running) - fastest
     - HTTP client (if server running on different machine)
-    - Mock client (for testing/development)
     """
     
     def __init__(self, 
                  use_direct: bool = True,
-                 use_mock: bool = False,
                  server_url: Optional[str] = None,
                  collection: str = "agent_memory"):
         """
@@ -49,21 +45,15 @@ class SynrixAgentBackend:
         
         Args:
             use_direct: Try to use direct shared memory (fastest)
-            use_mock: Use mock client (for testing)
             server_url: HTTP server URL (if not using direct)
             collection: Collection name for storing data
         """
         self.collection = collection
         self.client = None
-        self._init_client(use_direct, use_mock, server_url)
+        self._init_client(use_direct, server_url)
     
-    def _init_client(self, use_direct: bool, use_mock: bool, server_url: Optional[str]):
+    def _init_client(self, use_direct: bool, server_url: Optional[str]):
         """Initialize the best available client"""
-        if use_mock:
-            self.client = SynrixMockClient()
-            self.backend_type = "mock"
-            return
-        
         if use_direct and DIRECT_CLIENT_AVAILABLE:
             try:
                 self.client = SynrixDirectClient()

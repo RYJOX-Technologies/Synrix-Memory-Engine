@@ -20,7 +20,6 @@ except (ImportError, OSError):
     pass
 
 from .client import SynrixClient
-from .mock import SynrixMockClient
 from .exceptions import SynrixError, SynrixConnectionError, SynrixNotFoundError
 from .agent_memory import SynrixMemory
 from .agent_backend import SynrixAgentBackend, get_synrix_backend
@@ -36,7 +35,6 @@ try:
     from .auto_daemon import SynrixAutoDaemon, get_synrix_client
     __all__ = [
         "SynrixClient",
-        "SynrixMockClient",
         "SynrixMemory",
         "SynrixAgentBackend",
         "get_synrix_backend",
@@ -52,7 +50,6 @@ except ImportError:
     # Fallback if auto_daemon not available
     __all__ = [
         "SynrixClient",
-        "SynrixMockClient",
         "SynrixMemory",
         "SynrixAgentBackend",
         "get_synrix_backend",

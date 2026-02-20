@@ -3,18 +3,12 @@ SYNRIX Guided Tour
 
 Runs when users type: python -m synrix
 
-This is a safe, beginner-friendly introduction that uses the mock engine only.
+Uses the real SYNRIX engine (requires libsynrix.dll; set SYNRIX_LIB_PATH).
 """
 
 import time
-
-# Use absolute import to avoid relative import issues
-try:
-    from synrix.mock import SynrixMockClient
-except ImportError:
-    # Fallback for development/repo layout
-    from ..mock import SynrixMockClient
-
+import tempfile
+import os
 
 def print_step(step_num, title):
     print("\n" + "=" * 60)
@@ -35,7 +29,7 @@ def print_success(text):
 
 def run_tour():
     time.sleep(0.2)
-    
+
     print(r"""
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
@@ -45,7 +39,7 @@ def run_tour():
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
 """)
-    
+
     print_info("What is a knowledge graph?")
     print("""
 A knowledge graph stores information as connected nodes.
@@ -55,61 +49,65 @@ Think of it like Wikipedia, but structured for computers:
   • Prefixes organize related knowledge (LANGUAGE:, CONCEPT:)
   • You can query by prefix to retrieve related ideas instantly
 """)
-    
+
     input("\nPress Enter to begin... ")
-    
+
     # ------------------------------------------------------------
-    # STEP 1 — Create the graph
+    # STEP 1 — Open memory (real engine)
     # ------------------------------------------------------------
-    print_step(1, "Creating Your Knowledge Graph")
-    
+    print_step(1, "Opening SYNRIX Memory")
+
+    path = tempfile.mktemp(suffix=".lattice")
     try:
-        client = SynrixMockClient()
-        client.create_collection("my_first_graph")
+        from ..ai_memory import get_ai_memory
+        memory = get_ai_memory(lattice_path=path)
+        if memory.backend is None:
+            raise RuntimeError("DLL not loaded")
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"❌ Could not load SYNRIX engine: {e}")
+        print("   Set SYNRIX_LIB_PATH to the directory containing libsynrix.dll and try again.")
         return
-    
-    print_success("Knowledge graph created!")
-    
+
+    print_success("Memory opened!")
+
     # ------------------------------------------------------------
     # STEP 2 — Add nodes
     # ------------------------------------------------------------
     print_step(2, "Adding Knowledge")
-    
+
     concepts = [
         ("LANGUAGE:Python", "A high-level programming language"),
         ("LANGUAGE:JavaScript", "The language of the web"),
         ("CONCEPT:Variable", "A container that holds a value"),
         ("CONCEPT:Function", "A reusable block of code"),
     ]
-    
+
     print("\nAdding concepts to your graph:")
     for name, desc in concepts:
-        client.add_node(name, desc, collection="my_first_graph")
+        memory.add(name, desc)
         short = name.split(":")[1]
         print(f"  • Added: {short}")
         time.sleep(0.08)
-    
+
     print_success(f"Added {len(concepts)} concepts!")
-    
+
     # ------------------------------------------------------------
     # STEP 3 — Run queries
     # ------------------------------------------------------------
     print_step(3, "Querying Your Graph")
-    
+
     print("\n🔍 Finding all programming languages...")
-    languages = client.query_prefix("LANGUAGE:", collection="my_first_graph")
+    languages = memory.query("LANGUAGE:", limit=10)
     print_success(f"Found {len(languages)} languages:")
-    for result in languages:
-        print("  •", result["payload"]["name"].split(":")[1])
-    
+    for r in languages:
+        print("  •", r.get("name", "").split(":")[-1])
+
     print("\n🔍 Finding all general concepts...")
-    items = client.query_prefix("CONCEPT:", collection="my_first_graph")
+    items = memory.query("CONCEPT:", limit=10)
     print_success(f"Found {len(items)} concepts:")
-    for result in items:
-        print("  •", result["payload"]["name"].split(":")[1])
-    
+    for r in items:
+        print("  •", r.get("name", "").split(":")[-1])
+
     # ------------------------------------------------------------
     # Summary + Next Steps
     # ------------------------------------------------------------
@@ -125,18 +123,13 @@ Think of it like Wikipedia, but structured for computers:
 
 🚀 Next steps:
 
-  • Try: python examples/first_knowledge_graph.py
-  • Try: python examples/quickstart.py
-  • Explore the full SDK in README.md
-
-💡 Tip:
-
-This tour uses the mock engine so it's 100% safe and local.
-You can switch to a real SYNRIX server later without changing your code.
+  • See README.md for RoboticsNexus and agent memory usage
+  • Set SYNRIX_LIB_PATH for your own lattices
 """)
-    
-    # No need to close a mock client, but harmless
-    client.close()
+    try:
+        memory.close()
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
