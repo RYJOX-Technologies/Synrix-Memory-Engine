@@ -9,7 +9,6 @@ import json
 import time
 from typing import Optional, Dict, List, Any
 from .client import SynrixClient
-from .mock import SynrixMockClient
 
 # Try to import direct client (shared memory)
 try:
@@ -41,22 +40,18 @@ class SynrixMemory:
         self,
         client: Optional[SynrixClient] = None,
         collection: str = "agent_memory",
-        use_mock: bool = False,
         use_direct: bool = True
     ):
         """
         Initialize agent memory.
         
         Args:
-            client: SYNRIX client (default: creates new client or mock)
+            client: SYNRIX client (default: creates new client)
             collection: Collection name for storing memories
-            use_mock: If True, use mock client (for testing without server)
             use_direct: If True, try to use direct shared memory client (faster)
         """
         if client is None:
-            if use_mock:
-                self.client = SynrixMockClient()
-            elif use_direct and DIRECT_CLIENT_AVAILABLE:
+            if use_direct and DIRECT_CLIENT_AVAILABLE:
                 try:
                     self.client = SynrixDirectClient()
                 except Exception:
