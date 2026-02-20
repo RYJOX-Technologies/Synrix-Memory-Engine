@@ -96,20 +96,7 @@ Node limit is set by your license key (`SYNRIX_LICENSE_KEY`). When the limit is 
 
 ## Testing
 
-With the Synrix DLL available (set `SYNRIX_LIB_PATH` to the directory containing `libsynrix.dll`):
-
-**Standalone (no pytest):**
-```bash
-python tests/run_ai_memory_tests.py
-```
-
-**With pytest:**
-```bash
-pip install -e ".[dev]"
-pytest tests/ -v
-```
-
-Tests cover: add, query by prefix, get by id, chunked storage, count, and agent handoff (prefix-based plan/outcomes).
+Tests are not included in this repo. With the Synrix DLL, you can run the test suite from the development package (add, query, get, chunked storage, limit enforcement).
 
 ## Examples
 

@@ -1,0 +1,3 @@
+# Keep tests local only (not on public repo)
+tests/
+pytest.ini
