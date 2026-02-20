@@ -100,7 +100,4 @@ Tests are not included in this repo. With the Synrix DLL, you can run the test s
 
 ## Examples
 
-- `synrix/examples/agent_to_agent_demo.py` — shared lattice, prefix namespaces (plan/outcomes/summary).
-- `synrix/examples/joseph_agent_memory_demo.py` — store/recall user context by prefix.
-
-Run: `python -m synrix.examples.agent_to_agent_demo` (with `SYNRIX_LIB_PATH` set).
+Examples are not included in this repo. See the development package for demos (agent-to-agent, prefix namespaces).

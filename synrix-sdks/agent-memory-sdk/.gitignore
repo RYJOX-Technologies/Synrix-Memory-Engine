@@ -1,3 +1,4 @@
-# Keep tests local only (not on public repo)
+# Keep tests and examples local only (not on public repo)
 tests/
 pytest.ini
+synrix/examples/
