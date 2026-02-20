@@ -135,17 +135,23 @@ class AIMemory:
     def add(self, name: str, data: str) -> Optional[int]:
         """
         Add a memory to the lattice.
+        Uses chunked storage automatically when data exceeds 511 bytes (e.g. RAG documents).
         
         Args:
-            name: Memory key/name (e.g., "AI_MEMORY:user_preference")
-            data: Memory data/value
+            name: Memory key/name (e.g., "AI_MEMORY:user_preference" or "RAG:collection:doc_id")
+            data: Memory data/value (any length; >511 bytes stored via chunked API)
         
         Returns:
             Node ID if successful, None otherwise
         """
         if USE_RAW_BACKEND and self.backend:
             try:
-                node_id = self.backend.add_node(name, data, node_type=5)  # LATTICE_NODE_LEARNING
+                data_bytes = data.encode('utf-8')
+                if len(data_bytes) > 511:
+                    # RAG and large payloads: use chunked storage (architectural 512-byte node limit)
+                    node_id = self.backend.add_node_chunked(name, data_bytes, node_type=5)  # LATTICE_NODE_LEARNING
+                else:
+                    node_id = self.backend.add_node(name, data, node_type=5)  # LATTICE_NODE_LEARNING
                 if node_id:
                     self.backend.save()  # Auto-save
                 return node_id if node_id else None

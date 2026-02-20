@@ -543,7 +543,8 @@ class RawSynrixBackend:
                         parent_id: int = 0) -> int:
         """
         Add a node with chunked data (for data > 510 bytes).
-        Automatically chunks data into 500-byte chunks.
+        Chunking is done in the C engine: one call passes the full buffer; the engine
+        splits into 500-byte chunks and writes parent + chunk nodes (no Python loop).
         
         Args:
             name: Node name (e.g., "BINARY:large_file")
@@ -677,6 +678,20 @@ class RawSynrixBackend:
         # Free the node copy (this properly frees both the struct and children array)
         self.lib.lattice_free_node_copy(node_ptr)
         
+        # If this node is chunked storage (e.g. RAG document), return full payload
+        if hasattr(self.lib, 'lattice_get_node_chunked_size'):
+            try:
+                size = self.lib.lattice_get_node_chunked_size(
+                    ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)),
+                    node_id
+                )
+                if size > 0:
+                    full_data = self.get_node_chunked(node_id)
+                    if full_data is not None:
+                        result_dict["data"] = full_data.decode('utf-8', errors='replace')
+            except Exception:
+                pass
+        
         return result_dict
     
     def find_by_prefix(self, prefix: str, limit: int = 100, raw: bool = True) -> List[Dict[str, Any]]:
@@ -700,22 +715,43 @@ class RawSynrixBackend:
             For human users: Use raw=False if you need Python strings immediately.
             The C struct provides bytes (c_char arrays) - decoding is optional convenience.
         """
-        # Allocate buffer for node IDs
-        node_ids = (c_uint64 * limit)()
+        # Collect node IDs: both direct prefix and "C:"+prefix (chunked nodes store name as "C:name")
+        seen = set()
+        node_ids_list = []
         prefix_bytes = prefix.encode('utf-8')
-        
+        buf = (c_uint64 * limit)()
         count = self.lib.lattice_find_nodes_by_name(
             ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)),
             prefix_bytes,
-            node_ids,
+            buf,
             limit
         )
+        for i in range(count):
+            nid = buf[i]
+            if nid and nid not in seen:
+                seen.add(nid)
+                node_ids_list.append(nid)
+        chunk_prefix = ("C:" + prefix).encode('utf-8')
+        count2 = self.lib.lattice_find_nodes_by_name(
+            ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)),
+            chunk_prefix,
+            buf,
+            limit
+        )
+        for i in range(count2):
+            nid = buf[i]
+            if nid and nid not in seen:
+                seen.add(nid)
+                node_ids_list.append(nid)
+                if len(node_ids_list) >= limit:
+                    break
+        if len(node_ids_list) > limit:
+            node_ids_list = node_ids_list[:limit]
         
         # Use get_node() for each result (safer, handles errors)
         results = []
         
-        for i in range(count):
-            node_id = node_ids[i]
+        for node_id in node_ids_list:
             if node_id == 0:
                 continue  # Skip invalid node IDs
             
