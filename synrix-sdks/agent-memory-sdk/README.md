@@ -100,4 +100,5 @@ Tests are not included in this repo. With the Synrix DLL, you can run the test s
 
 ## Examples
 
-Examples are not included in this repo. See the development package for demos (agent-to-agent, prefix namespaces).
+- **`python -m synrix.examples.agent_memory_demo`** – Public demo: store key/value by prefix, query by prefix. Set `SYNRIX_LIB_PATH` first.
+- See `synrix/examples/README.md` for details.

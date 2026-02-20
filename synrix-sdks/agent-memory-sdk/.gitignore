@@ -1,4 +1,8 @@
-# Keep tests and examples local only (not on public repo)
+# Keep tests local only (not on public repo)
 tests/
 pytest.ini
-synrix/examples/
+
+# Keep internal examples local; only synrix/examples/agent_memory_demo.py is public
+synrix/examples/agent_to_agent_demo.py
+synrix/examples/joseph_agent_memory_demo.py
+synrix/examples/tour.py
