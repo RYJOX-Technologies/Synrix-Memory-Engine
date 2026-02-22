@@ -156,12 +156,12 @@ If you're building AI systems that need memory, Synrix sits underneath your mode
 
 ## Platform Support
 
-| Platform    | Status        |
-|------------|----------------|
-| Windows x64| Ready          |
-| Linux ARM64| In progress    |
-| Linux x86_64 | In progress  |
-| macOS      | In progress    |
+| Platform    | Status         |
+|-------------|----------------|
+| Windows x64 | Ready          |
+| Linux ARM64 | In progress    |
+| Linux x86_64| Ready          |
+| macOS       | In progress    |
 
 ---
 
