@@ -40,11 +40,11 @@ Synrix runs locally and uses deterministic retrieval:
 **Architecture**
 
 ```
-Your App → Python SDK → Synrix Engine (DLL) → Local Storage
+Your App → Python SDK → Synrix Engine (DLL on Windows, .so on Linux) → Local Storage
 ```
 
 - **Python SDK:** MIT licensed
-- **Engine:** local binary
+- **Engine:** local binary (one per platform; same tier-by-key behavior)
 - No network calls required
 
 ---
@@ -53,25 +53,34 @@ Your App → Python SDK → Synrix Engine (DLL) → Local Storage
 
 ### 1. Download
 
-Download the Windows package from [Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases):
+Download the engine for your platform from [Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases):
 
-- **`synrix-windows.zip`**
+- **Windows:** `synrix-windows.zip` — unzip to get `libsynrix.dll` and runtime DLLs (OpenSSL, etc.).
+- **Linux x86_64:** `synrix-linux-x86_64.tar.gz` — extract to get `libsynrix.so` and bundled runtime libs.
 
-Unzip it. You get the engine DLL and runtimes (e.g. `libsynrix.dll`, OpenSSL DLLs). The same binary is used for all tiers.
-
-If you do not set a license key, Synrix runs with a free default cap (~25k nodes), so you can try it immediately.
+The same engine is used for all tiers; limits are set by `SYNRIX_LICENSE_KEY` at runtime. No key = free default (~25k nodes). You can verify downloads using the SHA256 checksum shown for each asset on the release page.
 
 ### 2. Install the Python SDK
 
 The SDK lives in this repo. Clone the repo, then install one of the SDKs (e.g. agent-memory or robotics):
 
+**Windows (PowerShell):**
 ```powershell
 git clone https://github.com/RYJOX-Technologies/Synrix-Memory-Engine.git
 cd Synrix-Memory-Engine\synrix-sdks\agent-memory-sdk
 pip install -e .
 ```
 
-Put the unzipped engine DLLs in the same folder as your script, or in the SDK's `synrix/` folder, or set `SYNRIX_LIB_PATH` to the folder containing `libsynrix.dll`.
+**Linux (bash):**
+```bash
+git clone https://github.com/RYJOX-Technologies/Synrix-Memory-Engine.git
+cd Synrix-Memory-Engine/synrix-sdks/agent-memory-sdk
+pip install -e .
+```
+
+**Engine path:** Put the engine library in the same folder as your script, or in the SDK's `synrix/` folder, or set:
+- **Windows:** `SYNRIX_LIB_PATH` to the folder containing `libsynrix.dll`.
+- **Linux:** `LD_LIBRARY_PATH` or `SYNRIX_LIB_PATH` to the folder containing `libsynrix.so` (e.g. the extracted tarball directory).
 
 ### 3. Use It
 
@@ -146,9 +155,9 @@ If you're building AI systems that need memory, Synrix sits underneath your mode
 
 ## Requirements
 
-- **Windows x64**
+- **Windows x64** or **Linux x86_64**
 - **Python 3.8+**
-- **Engine:** `libsynrix.dll` (included in `synrix-windows.zip`) plus the runtime DLLs in that zip
+- **Engine:** Windows: `libsynrix.dll` and runtime DLLs (from `synrix-windows.zip`). Linux: `libsynrix.so` and bundled libs (from `synrix-linux-x86_64.tar.gz`).
 - **RAM:** <1GB for ~25k nodes (scales with node count)
 - **Disk:** ~1GB per 1M nodes
 
@@ -156,12 +165,12 @@ If you're building AI systems that need memory, Synrix sits underneath your mode
 
 ## Platform Support
 
-| Platform    | Status         |
-|-------------|----------------|
-| Windows x64 | Ready          |
-| Linux ARM64 | In progress    |
-| Linux x86_64| Ready          |
-| macOS       | In progress    |
+| Platform     | Status         |
+|--------------|----------------|
+| Windows x64  | Ready          |
+| Linux x86_64 | Ready          |
+| Linux ARM64  | In progress    |
+| macOS        | In progress    |
 
 ---
 
@@ -178,8 +187,11 @@ See [LICENSE](LICENSE) for details.
 
 ## Troubleshooting
 
-**DLL not found or process exits on init?**  
-Ensure `libsynrix.dll`, `libcrypto-3-x64.dll`, and `libssl-3-x64.dll` are in the same folder as your script or on PATH.
+**Windows: DLL not found or process exits on init?**  
+Ensure `libsynrix.dll`, `libcrypto-3-x64.dll`, and `libssl-3-x64.dll` are in the same folder as your script or on PATH (or set `SYNRIX_LIB_PATH` to that folder).
+
+**Linux: Library not found or import error?**  
+Set `LD_LIBRARY_PATH` or `SYNRIX_LIB_PATH` to the directory containing `libsynrix.so` (e.g. the extracted tarball folder). Ensure that directory contains the `.so` files from the release tarball.
 
 **Hit the node cap?**  
 Set `SYNRIX_LICENSE_KEY` to a higher-tier key.
