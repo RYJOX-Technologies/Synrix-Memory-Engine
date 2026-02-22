@@ -56,7 +56,7 @@ Your App → Python SDK → Synrix Engine (DLL on Windows, .so on Linux) → Loc
 Download the engine for your platform from [Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases):
 
 - **Windows:** `synrix-windows.zip` — unzip to get `libsynrix.dll` and runtime DLLs (OpenSSL, etc.).
-- **Linux x86_64:** `synrix-linux-x86_64.tar.gz` — extract to get `libsynrix.so` and bundled runtime libs.
+- **Linux ARM64:** `synrix-linux-arm64.tar.gz` — extract to get `libsynrix.so` and bundled runtime libs.
 
 The same engine is used for all tiers; limits are set by `SYNRIX_LICENSE_KEY` at runtime. No key = free default (~25k nodes). You can verify downloads using the SHA256 checksum shown for each asset on the release page.
 
@@ -155,9 +155,9 @@ If you're building AI systems that need memory, Synrix sits underneath your mode
 
 ## Requirements
 
-- **Windows x64** or **Linux x86_64**
+- **Windows x64** or **Linux ARM64**
 - **Python 3.8+**
-- **Engine:** Windows: `libsynrix.dll` and runtime DLLs (from `synrix-windows.zip`). Linux: `libsynrix.so` and bundled libs (from `synrix-linux-x86_64.tar.gz`).
+- **Engine:** Windows: `libsynrix.dll` and runtime DLLs (from `synrix-windows.zip`). Linux: `libsynrix.so` and bundled libs (from `synrix-linux-arm64.tar.gz`).
 - **RAM:** <1GB for ~25k nodes (scales with node count)
 - **Disk:** ~1GB per 1M nodes
 
@@ -168,8 +168,8 @@ If you're building AI systems that need memory, Synrix sits underneath your mode
 | Platform     | Status         |
 |--------------|----------------|
 | Windows x64  | Ready          |
-| Linux x86_64 | Ready          |
-| Linux ARM64  | In progress    |
+| Linux ARM64  | Ready          |
+| Linux x86_64 | In progress    |
 | macOS        | In progress    |
 
 ---
