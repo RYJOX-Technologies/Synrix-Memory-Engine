@@ -1,6 +1,6 @@
 # Synrix Memory Engine
 
-Persistent local memory for AI systems.
+Persistent local memory designed for AI agent use.
 
 Kill the process.
 Restart it.
