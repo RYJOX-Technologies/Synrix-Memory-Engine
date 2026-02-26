@@ -74,6 +74,12 @@ def _find_synrix_lib():
         if os.path.exists(lib_path):
             search_paths.append(lib_path)
     
+    # Linux: build/linux/out from build/linux/build.sh (per LINUX_COHESION_CHECKLIST)
+    if platform.system() != "Windows":
+        linux_out = os.path.join(project_root, "build", "linux", "out", lib_name)
+        if os.path.exists(linux_out):
+            search_paths.append(linux_out)
+    
     # Check Windows build location (relative to python-sdk)
     if platform.system() == "Windows":
         # Check in build directory (where CMake outputs the DLL)
@@ -166,6 +172,17 @@ class LatticeNode(Structure):
         ("timestamp", c_uint64),
         ("payload", LatticePayload),  # CRITICAL: Must include payload union
     ]
+
+
+class LicenseClaims(Structure):
+    """lattice_license_claims_t - must match C struct (node_limit, exp, iat, tier[32])"""
+    _fields_ = [
+        ("node_limit", c_uint32),
+        ("exp", c_uint64),
+        ("iat", c_uint64),
+        ("tier", c_char * 32),
+    ]
+
 
 # Node types (from persistent_lattice.h)
 LATTICE_NODE_PRIMITIVE = 1
@@ -430,8 +447,24 @@ class RawSynrixBackend:
         if result != 0:
             raise RuntimeError(f"Failed to initialize lattice: error code {result}")
         
+        # Apply Synrix license from env / ~/.synrix/license.json when .so/.dll has license support
+        if hasattr(self.lib, 'synrix_license_parse') and hasattr(self.lib, 'lattice_apply_license'):
+            try:
+                self.lib.synrix_license_parse.argtypes = [c_char_p, POINTER(LicenseClaims)]
+                self.lib.synrix_license_parse.restype = c_int
+                self.lib.lattice_apply_license.argtypes = [
+                    POINTER(ctypes.c_void_p), POINTER(LicenseClaims)
+                ]
+                self.lib.lattice_apply_license.restype = c_int
+                claims = LicenseClaims()
+                if self.lib.synrix_license_parse(None, byref(claims)) == 0:
+                    self.lib.lattice_apply_license(
+                        ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)), byref(claims)
+                    )
+            except (AttributeError, TypeError):
+                pass
         # Disable evaluation mode if requested (unlimited nodes)
-        if not evaluation_mode and hasattr(self.lib, 'lattice_disable_evaluation_mode'):
+        elif not evaluation_mode and hasattr(self.lib, 'lattice_disable_evaluation_mode'):
             self.lib.lattice_disable_evaluation_mode(ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)))
         
         # Note: WAL is already enabled by lattice_init() by default
