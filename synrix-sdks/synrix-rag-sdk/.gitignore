@@ -1,2 +1,6 @@
-# RAG SDK not pushed for now; revisit later
-examples/
+# RAG SDK: only examples/rag_simple_demo.py is the public demo
+# (When pushing RAG SDK, track that file; keep internal demos local)
+examples/rag_demo.py
+examples/rag_demo_kb.py
+examples/demo_*.lattice
+examples/demo_*.lattice.wal
