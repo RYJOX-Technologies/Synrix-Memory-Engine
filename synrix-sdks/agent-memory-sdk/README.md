@@ -65,9 +65,9 @@ This SDK is the Python client for the SYNRIX engine (DLL). It exposes **agent me
 
 ## Quick start (Windows)
 
-1) Install the SDK
+1) Install the SDK (from repo root: `synrix-sdks/agent-memory-sdk`)
 ```bash
-cd agent-memory-sdk
+cd synrix-sdks/agent-memory-sdk
 pip install -e .
 ```
 

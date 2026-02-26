@@ -60,7 +60,10 @@ def _find_synrix_lib():
         # 1. Check SYNRIX_LIB_PATH environment variable (highest priority)
     synrix_lib_path = os.environ.get("SYNRIX_LIB_PATH")
     if synrix_lib_path:
-        search_paths.append(synrix_lib_path)
+        if os.path.isfile(synrix_lib_path):
+            search_paths.append(synrix_lib_path)
+        else:
+            search_paths.append(os.path.join(synrix_lib_path, lib_name))
     
     # 2. Auto-detect relative to project root (smoothest for development)
     # Try to find project root by looking for common markers
@@ -272,8 +275,8 @@ class RawSynrixBackend:
                 "Please ensure libsynrix.dll is in the synrix package directory, "
                 f"set SYNRIX_LIB_PATH environment variable, "
                 f"or add the library directory to {path_hint}.\n"
-                f"Example: set SYNRIX_LIB_PATH=C:\\path\\to\\{lib_name}" if platform.system() == "Windows" 
-                else f"Example: export SYNRIX_LIB_PATH=/path/to/{lib_name}"
+                f"Example: set SYNRIX_LIB_PATH=C:\\path\\to\\folder\\with\\{lib_name}" if platform.system() == "Windows" 
+                else f"Example: export SYNRIX_LIB_PATH=/path/to/folder/with/{lib_name}"
             )
         
         try:

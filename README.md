@@ -51,14 +51,14 @@ Your App → Python SDK → Synrix Engine (DLL on Windows, .so on Linux) → Loc
 
 ## Quick Start (2–3 minutes)
 
-### 1. Download
+### 1. Download the engine
 
 Download the engine for your platform from [Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases):
 
-- **Windows:** `synrix-windows.zip` — unzip to get `libsynrix.dll` and runtime DLLs (OpenSSL, etc.).
-- **Linux ARM64:** `synrix-linux-arm64.tar.gz` — extract to get `libsynrix.so` and bundled runtime libs.
+- **Windows:** `synrix-windows.zip` — unzip to a folder (e.g. `C:\synrix-engine\`). You’ll get `libsynrix.dll` and runtime DLLs (OpenSSL, etc.).
+- **Linux ARM64:** `synrix-linux-arm64.tar.gz` — extract to a folder. You’ll get `libsynrix.so` and bundled runtime libs.
 
-The same engine is used for all tiers; limits are set by `SYNRIX_LICENSE_KEY` at runtime. No key = free default (~25k nodes). You can verify downloads using the SHA256 checksum shown for each asset on the release page.
+The same engine is used for all tiers; limits are set by `SYNRIX_LICENSE_KEY` at runtime. No key = free default (~25k nodes). Verify downloads using the SHA256 checksum on the release page.
 
 ### 2. Install the Python SDK
 
@@ -78,9 +78,11 @@ cd Synrix-Memory-Engine/synrix-sdks/agent-memory-sdk
 pip install -e .
 ```
 
-**Engine path:** Put the engine library in the same folder as your script, or in the SDK's `synrix/` folder, or set:
-- **Windows:** `SYNRIX_LIB_PATH` to the folder containing `libsynrix.dll`.
-- **Linux:** `LD_LIBRARY_PATH` or `SYNRIX_LIB_PATH` to the folder containing `libsynrix.so` (e.g. the extracted tarball directory).
+**Engine path (pick one):**
+- Put the engine in the same folder as your script, or
+- Copy `libsynrix.dll` (and the other DLLs from the zip) into `synrix-sdks/agent-memory-sdk/synrix/`, or
+- Set **Windows:** `SYNRIX_LIB_PATH` to the folder where you unzipped (e.g. `C:\synrix-engine`).  
+  **Linux:** `SYNRIX_LIB_PATH` or `LD_LIBRARY_PATH` to the folder where you extracted the tarball.
 
 ### 3. Use It
 
@@ -101,7 +103,7 @@ for r in results:
 backend.close()
 ```
 
-That's it. You're storing and querying AI memory locally.
+Run your script from any directory (with `SYNRIX_LIB_PATH` set if the engine isn’t next to the script or in the SDK’s `synrix/` folder). That’s it—you’re storing and querying AI memory locally.
 
 ---
 
