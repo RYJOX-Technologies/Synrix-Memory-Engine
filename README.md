@@ -1,213 +1,162 @@
-# Synrix Memory Engine
+# Synrix
 
-Persistent local memory designed for AI agent use.
+**AI memory that runs locally. No embeddings. No cloud. One binary.**
 
-Kill the process.
-Restart it.
-Ask the same question.
-Get the same answer instantly.
-
-No cloud.
-No re-ingestion.
-No nondeterministic recall.
-
-Think SQLite for AI and autonomous memory.
+192 ns reads. O(k) retrieval. Qdrant-compatible. Runs on a $200 Jetson or a $5K server.
 
 [![LangChain Compatible](https://img.shields.io/badge/langchain-compatible-brightgreen)](https://python.langchain.com/)
 [![OpenAI API](https://img.shields.io/badge/api-openai--compatible-blue)](https://platform.openai.com/)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20Proprietary-lightgrey)](LICENSE)
 
-**Official site:** https://www.ryjoxtechnologies.com
+## Install
 
----
-
-## Why Synrix?
-
-Most AI memory stacks rely on:
-
-- Cloud-hosted vector databases (latency, cost, vendor lock-in)
-- Approximate global search that degrades as datasets grow
-- Heavy indexing and tuning pipelines
-
-Synrix runs locally and uses deterministic retrieval:
-
-- Queries scale with results (O(k)), not total dataset size
-- Microsecond-scale local lookups
-- No network variance
-- No cold starts
-- No per-query cloud latency
-
-**Architecture**
-
-```
-Your App → Python SDK → Synrix Engine (DLL on Windows, .so on Linux) → Local Storage
-```
-
-- **Python SDK:** MIT licensed
-- **Engine:** local binary (one per platform; same tier-by-key behavior)
-- No network calls required
-
----
-
-## Quick Start (2–3 minutes)
-
-### 1. Download the engine
-
-Download the engine for your platform from [Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases):
-
-- **Windows:** `synrix-windows.zip` — unzip to a folder (e.g. `C:\synrix-engine\`). You’ll get `libsynrix.dll` and runtime DLLs (OpenSSL, etc.).
-- **Linux ARM64:** `synrix-linux-arm64.tar.gz` — extract to a folder. You’ll get `libsynrix.so` and bundled runtime libs.
-
-The same engine is used for all tiers; limits are set by `SYNRIX_LICENSE_KEY` at runtime. No key = free default (~25k nodes). Verify downloads using the SHA256 checksum on the release page.
-
-### 2. Install the Python SDK
-
-The SDK lives in this repo. Clone the repo, then install one of the SDKs (e.g. agent-memory or robotics):
-
-**Windows (PowerShell):**
-```powershell
-git clone https://github.com/RYJOX-Technologies/Synrix-Memory-Engine.git
-cd Synrix-Memory-Engine\synrix-sdks\agent-memory-sdk
-pip install -e .
-```
-
-**Linux (bash):**
 ```bash
-git clone https://github.com/RYJOX-Technologies/Synrix-Memory-Engine.git
-cd Synrix-Memory-Engine/synrix-sdks/agent-memory-sdk
-pip install -e .
+pip install synrix
 ```
 
-**Engine path (pick one):**
-- Put the engine in the same folder as your script, or
-- Copy `libsynrix.dll` (and the other DLLs from the zip) into `synrix-sdks/agent-memory-sdk/synrix/`, or
-- Set **Windows:** `SYNRIX_LIB_PATH` to the folder where you unzipped (e.g. `C:\synrix-engine`).  
-  **Linux:** `SYNRIX_LIB_PATH` or `LD_LIBRARY_PATH` to the folder where you extracted the tarball.
-
-### 3. Use It
+## First Query (3 lines)
 
 ```python
 from synrix.raw_backend import RawSynrixBackend
 
-# Open or create a memory store (25k default)
-backend = RawSynrixBackend("example.lattice", max_nodes=25_000)
-
-# Store data
-backend.add_node("TASK:login", "Implement user login", 5)
-
-# Query by prefix
-results = backend.find_by_prefix("TASK:")
-for r in results:
-    print(r["name"], r["data"])
-
-backend.close()
+db = RawSynrixBackend("my_memory.lattice")
+db.add_node("LEARNING_PYTHON_ASYNCIO", "asyncio uses event loops for concurrent I/O")
+results = db.find_by_prefix("LEARNING_PYTHON_", limit=10)
 ```
 
-Run your script from any directory (with `SYNRIX_LIB_PATH` set if the engine isn’t next to the script or in the SDK’s `synrix/` folder). That’s it—you’re storing and querying AI memory locally.
+No server. No Docker. No API key. No embedding model.
 
----
+## Why Synrix
 
-## What Makes This Different?
+| | Synrix | Mem0 | Qdrant | ChromaDB |
+|---|---|---|---|---|
+| **Read latency** | 192 ns (hot) / 3.2 us (warm) | 1.4s p95 (end-to-end) | 4 ms p50 | 12 ms p50 |
+| **Embedding model needed** | No | Yes | Yes | Yes |
+| **Cost per query** | $0 | Embedding API + cloud | Embedding API | Embedding API |
+| **Runs offline / edge** | Yes (one .so file) | No (cloud-first) | Partial (Docker) | Yes (local) |
+| **Retrieval model** | Prefix-semantic O(k) | Vector similarity | HNSW ANN | HNSW ANN |
+| **Qdrant API compatible** | Yes | No | Native | No |
 
-**O(k) queries** — Many vector databases rely on approximate global search that degrades as datasets grow. Synrix queries scale with the number of matching results, not the total dataset size.
+**Caveats:** Mem0/Qdrant latency includes embedding + retrieval (different workload). Synrix uses prefix lookup, not fuzzy similarity — different retrieval semantics. [See full comparison →](docs/SYNRIX_VS_REDDIT_ARXIV_MEMORY_PROJECTS.md)
 
-**Local-first** — Everything runs on your machine. No cloud dependency. No data leaves your environment.
+## Demos
 
-**Single binary** — Same engine for everyone. Node limits are set by a signed license key at runtime.
+Run any of these after `pip install synrix` — no server, no setup:
 
----
+```bash
+# Local RAG without embeddings — prefix-semantic document retrieval
+python3 python-sdk/examples/hello_memory.py
 
-## What Synrix Is
+# Multi-session agent memory — cross-session recall in microseconds
+python3 python-sdk/examples/ai_agent_synrix_demo.py
 
-- A persistent local memory engine
-- A deterministic retrieval substrate
-- A low-level primitive you embed in your stack
-- Hardware-aligned, mmap-based storage
+# O(k) scaling proof — 100K nodes, query time scales with matches not corpus
+python3 python-sdk/examples/test_scale_nodes.py
+```
 
-## What Synrix Is Not
+## How It Works
 
-- Not an LLM
-- Not an agent framework
-- Not a cloud vector database
-- Not a SaaS platform
+```
+Your App → Python SDK → libsynrix.so → Memory-Mapped Lattice File
+```
 
----
+Synrix stores knowledge as a **Binary Lattice** — a dense array of fixed-size nodes (1216 bytes, cache-aligned) in memory-mapped files. Nodes use **semantic prefix naming** (`ISA_ADD`, `LEARNING_PYTHON_ASYNCIO`, `DOC_K8S_PODS_1`) instead of vector embeddings.
 
-## Who Synrix Is For
+Retrieval uses a **dynamic prefix index**: query cost scales with the number of matches (k), not the total corpus size (N). At 500K nodes, 1000 matches take ~0.022 ms.
 
-- ML engineers building agents
-- Infra teams replacing vector DBs
-- Robotics / edge AI systems
-- Code intelligence systems
-- AI-native startups running local-first stacks
+No pointer chasing. No embedding model. No ANN index. Just arithmetic addressing and prefix lookup.
 
-If you're building AI systems that need memory, Synrix sits underneath your model.
+[Read the whitepaper →](Synrix_Technical_Whitepaper_v1.9.md)
 
----
+## Benchmarks
+
+```bash
+# Quick (1K nodes, Synrix + ChromaDB)
+python3 python-sdk/examples/benchmark_synrix.py
+
+# Full (100K nodes, all backends)
+python3 python-sdk/examples/benchmark_synrix.py --full
+```
+
+Run it yourself. All numbers are reproducible. Results written to `python-sdk/benchmark_results/latest.json`.
+
+## Already Using Qdrant?
+
+Synrix is a drop-in replacement. Same REST API, same Python client:
+
+```python
+from qdrant_client import QdrantClient
+
+# Before: client = QdrantClient(url="http://qdrant-server:6333")
+# After:
+client = QdrantClient(url="http://localhost:6334")  # Synrix server
+```
+
+Start the Qdrant-compatible server:
+
+```bash
+# Evaluation (free, 25K nodes)
+./synrix-server-evaluation --port 6334
+
+# Production (requires license)
+./synrix-server --port 6334 --production
+```
+
+API compatibility: collections, points upsert, search, health. Covers most RAG and agent workloads.
 
 ## Use Cases
 
-- Retrieval Augmented Generation (RAG)
-- AI agent memory
-- Structured task storage
-- Local AI state management
-- Low-latency recall pipelines
-
----
-
-## Requirements
-
-- **Windows x64** or **Linux ARM64**
-- **Python 3.8+**
-- **Engine:** Windows: `libsynrix.dll` and runtime DLLs (from `synrix-windows.zip`). Linux: `libsynrix.so` and bundled libs (from `synrix-linux-arm64.tar.gz`).
-- **RAM:** <1GB for ~25k nodes (scales with node count)
-- **Disk:** ~1GB per 1M nodes
-
----
+- **RAG** — Store documents with semantic prefixes, retrieve by topic without embeddings
+- **Agent memory** — Cross-session recall of user preferences, conversation history, learned patterns
+- **Code intelligence** — Store code patterns, ISA definitions, build artifacts with semantic naming
+- **Edge AI** — Full memory engine on Jetson, Raspberry Pi, or any ARM64/x86_64 device
 
 ## Platform Support
 
-| Platform     | Status         |
-|--------------|----------------|
-| Windows x64  | Ready          |
-| Linux ARM64  | Ready          |
-| Linux x86_64 | In progress    |
-| macOS        | In progress    |
+| Platform | Status |
+|----------|--------|
+| Linux x86_64 | Ready |
+| Linux ARM64 (Jetson, Pi) | Ready |
+| Windows x86_64 | Ready |
+| macOS | In progress |
 
----
+## Build From Source
+
+```bash
+# Linux — produces build/linux/out/libsynrix.so
+./build/linux/build.sh
+
+# Use with SDK
+export LD_LIBRARY_PATH="$(pwd)/build/linux/out:$LD_LIBRARY_PATH"
+pip install -e python-sdk/
+```
+
+## Performance (Validated on Jetson Orin Nano)
+
+| Metric | Value |
+|--------|-------|
+| Hot-read latency | 192 ns |
+| Warm-read average | 3.2 us |
+| Durable write | ~28 us |
+| Sustained ingestion | 512 MB/s |
+| Max validated scale | 500K nodes (O(k) confirmed) |
+| Max supported | 50M nodes (47.68 GB) |
 
 ## License
 
-- **Python SDK:** MIT
-- **Engine:** Proprietary
+- **Python SDK**: MIT
+- **Evaluation engine**: Free (25K node limit)
+- **Production engine**: Commercial license (tiered: 25K → 1M → 10M → 50M → unlimited)
 
-The engine runs freely up to ~25k nodes without a key. Higher limits (1M / 10M / 50M / unlimited) are enabled via signed license keys.
+No signup required to try Synrix. The evaluation engine has the same API and performance characteristics as production.
 
-See [LICENSE](LICENSE) for details.
+## Links
 
----
-
-## Troubleshooting
-
-**Windows: DLL not found or process exits on init?**  
-Ensure `libsynrix.dll`, `libcrypto-3-x64.dll`, and `libssl-3-x64.dll` are in the same folder as your script or on PATH (or set `SYNRIX_LIB_PATH` to that folder).
-
-**Linux: Library not found or import error?**  
-Set `LD_LIBRARY_PATH` or `SYNRIX_LIB_PATH` to the directory containing `libsynrix.so` (e.g. the extracted tarball folder). Ensure that directory contains the `.so` files from the release tarball.
-
-**Hit the node cap?**  
-Set `SYNRIX_LICENSE_KEY` to a higher-tier key.
-
-**Python cannot find the SDK?**  
-Install from this repo (`synrix-sdks/agent-memory-sdk` or `synrix-sdks/robotics-sdk`) with `pip install -e .` or ensure `synrix` is on `sys.path`.
+- [Technical Whitepaper](Synrix_Technical_Whitepaper_v1.9.md)
+- [Comparison vs Mem0, MemGPT, Qdrant, Zep](docs/SYNRIX_VS_REDDIT_ARXIV_MEMORY_PROJECTS.md)
+- [System Architecture Write-Up](docs/SYNRIX_AION_OMEGA_SYSTEM_WRITEUP.md)
+- [GitHub Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases)
 
 ---
 
-## Getting Help
-
-- Open a [GitHub issue](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/issues)
-- See this repo's `synrix-sdks/` for SDK source and READMEs
-
----
-
-**Synrix Memory Engine** — Fast, local AI memory. Your data. Your machine.
+**Synrix** — Fast, local AI memory. Your data, your machine, your rules.
