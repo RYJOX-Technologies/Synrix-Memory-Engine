@@ -37,7 +37,7 @@ No server. No Docker. No API key. No embedding model.
 | **Retrieval model** | Prefix-semantic O(k) | Vector similarity | HNSW ANN | HNSW ANN |
 | **Qdrant API compatible** | Yes | No | Native | No |
 
-**Caveats:** Mem0/Qdrant latency includes embedding + retrieval (different workload). Synrix uses prefix lookup, not fuzzy similarity — different retrieval semantics. [See full comparison →](docs/SYNRIX_VS_REDDIT_ARXIV_MEMORY_PROJECTS.md)
+**Caveats:** Mem0/Qdrant latency includes embedding + retrieval (different workload). Synrix uses prefix lookup, not fuzzy similarity — different retrieval semantics.
 
 ## Demos
 
@@ -66,7 +66,6 @@ Retrieval uses a **dynamic prefix index**: query cost scales with the number of 
 
 No pointer chasing. No embedding model. No ANN index. Just arithmetic addressing and prefix lookup.
 
-[Read the whitepaper →](Synrix_Technical_Whitepaper_v1.9.md)
 
 ## Benchmarks
 
