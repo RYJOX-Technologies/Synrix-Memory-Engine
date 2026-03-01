@@ -3,6 +3,8 @@
 # === Internal only (do not push) ===
 HN_LAUNCH_ANALYSIS.md
 MEDIUM_ARTICLE_EDITS.md
+docs/RELEASE_CHECKLIST.md
+docs/SDK_CONSOLIDATION_RECOMMENDATION.md
 
 # === Docs pending redaction (untrack until secret-sauce removed) ===
 docs/SYNRIX_AION_OMEGA_SYSTEM_WRITEUP.md
