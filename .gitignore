@@ -7,13 +7,7 @@ docs/RELEASE_CHECKLIST.md
 docs/SDK_CONSOLIDATION_RECOMMENDATION.md
 
 # === Docs pending redaction (untrack until secret-sauce removed) ===
-docs/SYNRIX_AION_OMEGA_SYSTEM_WRITEUP.md
-docs/ARCHITECTURE.md
-docs/JEPSEN_STYLE_CRASH_TESTING.md
-docs/LAUNCH_PLAN_TECHNICAL_SPEC.md
-docs/WINDOWS_LINUX_ALIGNMENT.md
-docs/LINUX_COHESION_CHECKLIST.md
-docs/RELEASE.md
+# (none – redactions complete; ARCHITECTURE, JEPSEN, LAUNCH_PLAN, WINDOWS_LINUX, LINUX_COHESION, RELEASE, SYNRIX_AION_OMEGA are now public-safe)
 
 # === C source (build locally; release binaries via GitHub Releases) ===
 src/

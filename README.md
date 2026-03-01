@@ -23,7 +23,7 @@ cd Synrix-Memory-Engine
 
 - **Crash recovery**: Write 500 nodes, crash mid-write (SIGKILL), recover perfectly. Zero data loss.
 - **Latency**: Single-digit microsecond queries (192 ns hot, 3.2 μs warm)
-- **Learning**: Mahalanobis from PMU feedback
+- **Learning**: Deterministic learning from execution feedback
 
 ## What Is Synrix?
 
