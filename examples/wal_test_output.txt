@@ -1,0 +1,75 @@
+========================================
+SYNRIX WAL Test Suite
+========================================
+
+========================================
+TEST 1: Basic WAL Functionality
+========================================
+
+✅ WAL enabled
+Adding 1000 nodes with WAL...
+  Added 100 nodes...
+  Added 200 nodes...
+  ...
+✅ Added 1000 nodes with WAL
+Checkpointing WAL...
+✅ WAL checkpointed
+✅ Lattice saved
+Total nodes: 1000
+
+✅ TEST 1 PASSED
+
+========================================
+TEST 2: WAL Recovery
+========================================
+
+✅ Loaded lattice: 1000 nodes
+Recovering from WAL...
+✅ Recovery complete
+Total nodes after recovery: 1000
+Verified 1000 nodes exist
+
+✅ TEST 2 PASSED
+
+========================================
+TEST 3: Crash Recovery (Simulated)
+========================================
+
+✅ Added 500 nodes
+✅ Checkpointed at 500 nodes
+✅ Added 200 more nodes (total: 700)
+Simulating crash (not saving lattice, WAL has uncheckpointed entries)...
+
+Recovering from crash...
+✅ Loaded lattice: 500 nodes (from checkpoint)
+Recovering from WAL...
+✅ Recovery complete
+Total nodes after recovery: 700
+✅ Recovered uncheckpointed nodes (expected ~700, got 700)
+
+✅ TEST 3 PASSED
+
+========================================
+TEST 4: WAL Statistics
+========================================
+
+WAL Statistics:
+  Total entries: 100
+  Checkpointed entries: 0
+  Pending entries: 100
+
+After checkpoint:
+  Total entries: 100
+  Checkpointed entries: 100
+  Pending entries: 0
+
+✅ TEST 4 PASSED
+
+========================================
+Test Summary
+========================================
+Tests passed: 4
+Tests failed: 0
+Total tests: 4
+
+✅ ALL TESTS PASSED

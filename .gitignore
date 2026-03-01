@@ -1,5 +1,9 @@
 # Rename note: This is .gitignore for GitHub. Do not commit the private key or binaries.
 
+# === Internal only (do not push) ===
+HN_LAUNCH_ANALYSIS.md
+MEDIUM_ARTICLE_EDITS.md
+
 # === Secrets (never commit) ===
 synrix_license_private.key
 *.key
@@ -20,7 +24,8 @@ synrix_license_private.key
 *.a
 *.pdb
 *.manifest
-Makefile
+build/Makefile
+**/build/**/Makefile
 CMakeCache.txt
 CMakeFiles/
 

@@ -1,0 +1,39 @@
+==========================================
+SYNRIX Crash Recovery Demo
+==========================================
+
+This demo will:
+  1. Write 500 nodes with WAL enabled
+  2. Crash at node 500 (simulated)
+  3. Recover from WAL and show nodes recovered
+
+Step 1: Writing nodes with WAL (will crash at node 500)...
+------------------------------------------------------------
+=== AION OMEGA CRASH TEST (Jepsen-Style) ===
+
+[CRASH-TEST] Using test file: /tmp/aion_crash_tests/crash_test.lattice
+[CRASH-TEST] ✅ WAL enabled for crash recovery
+[CRASH-TEST] Writing 1000 nodes with crash at node 500...
+[CRASH-TEST] 💾 Saved at node 100 (total: 100)
+[CRASH-TEST] 💾 Saved at node 200 (total: 200)
+[CRASH-TEST] 💾 Saved at node 300 (total: 300)
+[CRASH-TEST] 💾 Saved at node 400 (total: 400)
+[CRASH-TEST] 💾 Saved at node 500 (total: 500)
+[CRASH-TEST] 💥 CRASHING NOW after node 500...
+Killed
+
+Step 2: Recovering from WAL...
+------------------------------------------------------------
+[CRASH-TEST] Verifying recovery after Power Loss...
+[CRASH-TEST] ✅ Loaded lattice: 500 nodes (from checkpoint)
+[CRASH-TEST] Recovering from WAL...
+[CRASH-TEST] ✅ WAL recovery completed
+[CRASH-TEST] Actual nodes after recovery: 500
+[CRASH-TEST] ✅ Recovery verified: 500 nodes recovered (expected >= 500)
+[CRASH-TEST] ✅ ZERO DATA LOSS: All nodes recovered from WAL after crash
+
+=== ✅ CRASH TEST COMPLETE ===
+
+==========================================
+✅ Crash Recovery Demo Complete
+==========================================
