@@ -2,19 +2,17 @@
 
 **5 minutes from clone to proof.**
 
-## 1. Clone
+## 1. Get the release
 
-```bash
-git clone https://github.com/RYJOX-Technologies/Synrix-Memory-Engine
-cd Synrix-Memory-Engine
-```
+Download the latest [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform and extract it (or clone the repo).
 
 ## 2. See Crash Recovery (30 seconds)
 
 ```bash
-make build
 ./tools/crash_recovery_demo.sh
 ```
+
+*(Tools are included in the release; on Windows use the provided scripts or run the demo from the extracted folder.)*
 
 You should see:
 ```
@@ -48,17 +46,15 @@ print(results)
 
 ## 5. Run Tests
 
-```bash
-make test-core
-```
+Use the test scripts included in the release, or see the main [README](../README.md) for SDK and platform details.
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| `crash_test: command not found` | Run `make build` first |
+| `crash_test: command not found` | Use the tools from the [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform |
 | `Global usage limit reached` | Clear `~/.synrix/license_usage/` (free tier 25K nodes) |
-| Build fails | Ensure gcc, std=c11. See [Build](../README.md#build-from-source) |
+| Build from source | See platform-specific build docs (Windows: `build/windows/`; Linux: `build/linux/build.sh`) |
 
 ## Next Steps
 

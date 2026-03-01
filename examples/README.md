@@ -11,8 +11,9 @@ These files show real output from Synrix tools. Run them yourself to verify.
 
 ## Run Yourself
 
+Download the [latest release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases), extract, then:
+
 ```bash
-make build
 ./tools/crash_recovery_demo.sh
 ./tools/run_query_latency_diagnostic.sh
 ```
