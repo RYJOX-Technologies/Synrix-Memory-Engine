@@ -30,6 +30,14 @@ results = db.find_by_prefix("LEARNING_PYTHON_", limit=10)
 
 No server. No Docker. No API key. No embedding model.
 
+## Learn More
+
+Want to understand the "why" behind these numbers? Read our analysis:
+
+**[Why Agent Memory Speed Matters: Sub-Millisecond Retrieval Enables Adaptive Reasoning](https://medium.com/@ryjoxtechnologies/why-agent-memory-speed-matters-sub-millisecond-retrieval-enables-adaptive-reasoning-40714bdbc48a)**
+
+This explains how sub-millisecond memory enables adaptive reasoning in agents, validated on both desktop (Ryzen 7700X: 0.16ms) and edge hardware (Jetson Orin Nano: 0.60ms).
+
 ## Why Synrix
 
 | | Synrix | Mem0 | Qdrant | ChromaDB |
@@ -158,7 +166,7 @@ No signup required to try Synrix. The evaluation engine has the same API and per
 
 ## Links
 - [GitHub Releases](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases)
-
+- [Medium Article: Why Agent Memory Speed Matters](https://medium.com/@ryjoxtechnologies/why-agent-memory-speed-matters-sub-millisecond-retrieval-enables-adaptive-reasoning-40714bdbc48a) – Analysis of sub-millisecond retrieval and adaptive reasoning
 ---
 
 **Synrix** — Fast, local AI memory. Your data, your machine, your rules.
