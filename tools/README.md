@@ -1,6 +1,6 @@
 # Synrix Tools
 
-Proof tools for crash recovery, latency, and ACID validation.
+Proof tools for crash recovery, latency, and durability validation.
 
 ## Quick Start
 

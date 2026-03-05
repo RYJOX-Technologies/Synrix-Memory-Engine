@@ -1,14 +1,14 @@
 # Synrix: Jepsen-Style Crash Testing
 
-**We don't just claim ACID. We prove it.**
+**We prove durability and crash recovery—not full ACID.**
 
 ---
 
 ## What This Means
 
-Most databases claim "ACID compliance." Most don't validate it under worst-case scenarios.
+Synrix does **not** provide full ACID (no multi-op transactions, no serializable isolation). We do prove **durability** and **crash recovery** under worst-case scenarios.
 
-Synrix uses **Jepsen-style crash injection testing** to prove durability:
+Synrix uses **Jepsen-style crash injection testing** to prove:
 
 - Crash injection (SIGKILL mid-write)
 - WAL recovery verification
@@ -99,18 +99,16 @@ Killed
 
 ## Pitch Copy (Anthropic / Launch)
 
-> **Synrix is ACID-compliant with proven crash recovery.**
+> **Synrix has proven crash recovery and durable writes (WAL + fsync).**
 >
-> Rather than claim it, we validate it:
+> We validate it:
 > - Jepsen-style crash injection (SIGKILL)
 > - 100 crash scenarios tested
 > - Durability validated under corruption
-> - Concurrency tested with snapshot isolation
+> - Concurrency tested under load
 > - File integrity verified (SHA256 validation)
 >
-> Run our test suite yourself. Verify the claims.
->
-> This is not marketing. This is proof.
+> Run our test suite yourself. We don't claim full ACID (no multi-op transactions); we do prove durability and zero data loss after crash.
 
 ---
 
@@ -118,7 +116,7 @@ Killed
 
 **Production-Grade Durability**
 
-We don't just claim ACID compliance. We prove it.
+We prove durability and crash recovery.
 
 - Crash injection testing (100 scenarios)
 - Durability validation under corruption

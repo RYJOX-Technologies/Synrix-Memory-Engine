@@ -33,7 +33,7 @@
 |---|---|---|---|---|
 | Read latency | 192 ns (hot) | 1.4s p95 | 4 ms p50 | 12 ms p50 |
 | Embedding model | No | Yes | Yes | Yes |
-| ACID + crash proof | Yes | No | Partial | No |
+| Durable + crash proof | Yes | No | Partial | No |
 
 *Caveats: Mem0/Qdrant latency includes embedding + retrieval. Synrix uses prefix lookup, not fuzzy similarity.*
 

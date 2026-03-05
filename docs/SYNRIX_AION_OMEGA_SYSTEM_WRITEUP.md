@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-**Synrix** is a persistent Binary Lattice—a high-performance memory engine for AI systems. It provides O(k) semantic retrieval (query cost scales with result count, not corpus size), memory-mapped storage that exceeds RAM, and ACID durability. It runs locally, is Qdrant-compatible, and serves as the memory substrate for RAG, agents, and code intelligence.
+**Synrix** is a persistent Binary Lattice—a high-performance memory engine for AI systems. It provides O(k) semantic retrieval (query cost scales with result count, not corpus size), memory-mapped storage that exceeds RAM, and durable writes (WAL + crash recovery). It runs locally, is Qdrant-compatible, and serves as the memory substrate for RAG, agents, and code intelligence.
 
 **Aion Omega** is the broader applied-research system built on Synrix. It generates executable assembly through knowledge-graph–driven reasoning, empirical hardware discovery, and iterative refinement. It is **not** an LLM: it is a memory engine, reasoning system, and code-generation framework that discovers ISA capabilities from real compilation, tests hypotheses on real hardware, and learns from execution feedback.
 
@@ -57,7 +57,7 @@ Synrix is a **Binary Lattice**—a dense, fixed-size array of nodes stored in me
 - **Fixed-size nodes**, cache-aligned for CPU and OS paging.
 - **Storage:** Memory-mapped; lattice can exceed RAM (multiples of RAM supported).
 - **Lookup:** O(1) by ID; O(k) semantic query via prefix index (k = matches, not total nodes).
-- **Durability:** WAL, ACID, checkpointed operations.
+- **Durability:** WAL, fsync, checkpointed operations.
 
 ### 2.2 Node Types (High Level)
 

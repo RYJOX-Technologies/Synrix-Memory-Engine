@@ -2,17 +2,44 @@
 
 **5 minutes from clone to proof.**
 
-## 1. Get the release
+## Easiest path (Windows + Linux): pip + engine + Python
 
-Download the latest [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform and extract it (or clone the repo).
+No download required. Works the same on Windows and Linux.
 
-## 2. See Crash Recovery (30 seconds)
+```bash
+pip install synrix
+```
+(From the repo: `pip install -e python-sdk/` from the repo root.)
+```bash
+synrix install-engine
+synrix run
+```
+
+Leave that terminal open. In a **second terminal**:
+
+```bash
+python -c "
+from synrix import SynrixClient
+c = SynrixClient(host='localhost', port=6334)
+c.create_collection('demo')
+c.add_node('HELLO_SYNRIX', 'Durable memory for AI agents', collection='demo')
+print(c.query_prefix('HELLO_', collection='demo'))
+"
+```
+
+You should see your node printed. Free evaluation (25K nodes), no signup.
+
+---
+
+## Linux: Crash recovery + latency (from release)
+
+Download the latest [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform and extract it.
+
+### See Crash Recovery (30 seconds)
 
 ```bash
 ./tools/crash_recovery_demo.sh
 ```
-
-*(Tools are included in the release; on Windows use the provided scripts or run the demo from the extracted folder.)*
 
 You should see:
 ```
@@ -21,7 +48,7 @@ You should see:
 [CRASH-TEST] ✅ ZERO DATA LOSS: All nodes recovered from WAL after crash
 ```
 
-## 3. Measure Latency (1 minute)
+### Measure Latency (1 minute)
 
 ```bash
 ./tools/run_query_latency_diagnostic.sh
@@ -29,11 +56,9 @@ You should see:
 
 Output shows min/max/avg latency for prefix search and O(1) lookup.
 
-## 4. Use Python SDK (2 minutes)
+## Raw backend (direct lib)
 
-```bash
-pip install synrix
-```
+If you have `libsynrix.so` (Linux) or the engine lib on your path:
 
 ```python
 from synrix.raw_backend import RawSynrixBackend
@@ -44,7 +69,7 @@ results = db.find_by_prefix("LEARNING_PYTHON_", limit=10)
 print(results)
 ```
 
-## 5. Run Tests
+## Run Tests
 
 Use the test scripts included in the release, or see the main [README](../README.md) for SDK and platform details.
 
@@ -52,7 +77,9 @@ Use the test scripts included in the release, or see the main [README](../README
 
 | Issue | Fix |
 |-------|-----|
-| `crash_test: command not found` | Use the tools from the [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform |
+| `Connection refused` when using SynrixClient | Start the engine first: `synrix run` (in another terminal) |
+| `Engine not found` | Run `synrix install-engine` |
+| `crash_test: command not found` | Use the tools from the [release](https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases) for your platform (Linux/macOS) |
 | `Global usage limit reached` | Clear `~/.synrix/license_usage/` (free tier 25K nodes) |
 | Build from source | See platform-specific build docs (Windows: `build/windows/`; Linux: `build/linux/build.sh`) |
 
@@ -60,4 +87,4 @@ Use the test scripts included in the release, or see the main [README](../README
 
 - [Architecture](ARCHITECTURE.md) — How it works
 - [Benchmarks](BENCHMARKS.md) — Real numbers
-- [ACID Guarantees](ACID.md) — What we prove
+- [Durability & crash recovery](ACID.md) — What we prove

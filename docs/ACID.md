@@ -1,24 +1,32 @@
-# Synrix ACID Guarantees
+# Synrix: Durability and Crash Recovery
 
 ## What We Prove
 
-We don't just claim ACID. We validate it under worst-case scenarios.
+We validate **durability** and **crash recovery** under worst-case scenarios. We do not claim full ACID (no multi-operation transactions, no serializable isolation).
 
-Synrix uses **Jepsen-style crash injection testing** to prove durability:
+Synrix uses **Jepsen-style crash injection testing** to prove:
 
-- Crash injection (SIGKILL mid-write)
-- WAL recovery verification
-- 100+ corruption scenarios
-- Snapshot isolation under concurrent load
+- **Durability:** WAL + fsync; checkpointed data survives power loss.
+- **Single-operation atomicity:** Each add is all-or-nothing; incomplete writes are rolled back on recovery.
+- **Crash recovery:** SIGKILL mid-write → replay WAL → zero data loss for checkpointed operations.
+- **Consistency:** Checkpoint + replay; no partial state on disk.
 
-## ACID Properties
+We do **not** provide:
+
+- Multi-operation transactions (no `BEGIN; add(); add(); COMMIT;`).
+- Serializable isolation (readers can see intermediate states; seqlock gives lock-free reads, not full isolation levels).
+- Rollback of multi-step operations.
+
+For agent workloads (store/retrieve patterns, single-op writes), this tradeoff is intentional: we prioritize speed and simplicity.
+
+## What We Guarantee
 
 | Property | Implementation |
 |----------|-----------------|
-| **Atomicity** | WAL: all-or-nothing. Incomplete writes are rolled back on recovery. |
-| **Consistency** | Checkpoint + replay. No partial state. |
-| **Isolation** | Snapshot isolation via seqlocks. Readers see consistent view. |
 | **Durability** | WAL fsync. Checkpointed data survives power loss. |
+| **Single-op atomicity** | Each write is all-or-nothing; recovery rolls back incomplete writes. |
+| **Consistency** | Checkpoint + replay. No partial state on disk. |
+| **Isolation** | Lock-free reads (seqlock). Not serializable; readers may see intermediate states. |
 
 ## Crash Recovery
 
@@ -50,7 +58,7 @@ Output:
 | **Crash at 500** | Partial writes rolled back correctly |
 | **WAL Truncation** | Incomplete writes don't corrupt checkpoints |
 | **Byte Flips** | Checkpointed data survives corruption injection |
-| **Concurrent Writes** | Snapshot isolation under load |
+| **Concurrent Writes** | Behavior under load (not full transaction isolation) |
 
 ## Further Reading
 
