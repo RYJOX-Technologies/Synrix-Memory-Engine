@@ -4,7 +4,7 @@
 
 We validate **durability** and **crash recovery** under worst-case scenarios. We do not claim full ACID (no multi-operation transactions, no serializable isolation).
 
-Synrix uses **Jepsen-style crash injection testing** to prove:
+Synrix uses **crash injection testing** (kill-9) to prove:
 
 - **Durability:** WAL + fsync; checkpointed data survives power loss.
 - **Single-operation atomicity:** Each add is all-or-nothing; incomplete writes are rolled back on recovery.
@@ -62,5 +62,5 @@ Output:
 
 ## Further Reading
 
-- [Jepsen-Style Crash Testing](JEPSEN_STYLE_CRASH_TESTING.md)
+- [Crash Testing](CRASH_TESTING.md)
 - [Tools README](../tools/README.md)
