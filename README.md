@@ -1,6 +1,6 @@
 # Synrix: Durable Database for AI Agents
 
-**Microsecond queries. Deterministic learning. Crash-safe.**
+**Microsecond queries. Crash-safe. Proven durability.**
 
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20Proprietary-lightgrey)](LICENSE)
 
@@ -59,7 +59,7 @@ If `synrix install-engine` fails, download the engine from the [latest release](
 
 - **Crash recovery**: Write 500 nodes, crash mid-write (SIGKILL), recover perfectly. Zero data loss.
 - **Latency**: Single-digit microsecond queries (192 ns hot, 3.2 μs warm)
-- **Learning**: Deterministic learning from execution feedback
+- **O(k) scaling**: Query cost scales with result count, not corpus size
 
 ## What Is Synrix?
 
@@ -69,7 +69,7 @@ Synrix is a **durable, crash-safe database** for AI agents. It stores knowledge 
 |---|---|---|---|---|
 | **Read latency** | 192 ns (hot) / 3.2 μs (warm) | 1.4s p95 | 4 ms p50 | 12 ms p50 |
 | **Embedding model** | No | Yes | Yes | Yes |
-| **Durable + crash proof** | Yes (Jepsen-style) | No | Partial | No |
+| **Durable + crash proof** | Yes (kill-9 tested) | No | Partial | No |
 | **Runs offline/edge** | Yes | No | Partial | Yes |
 
 ## Install (Python SDK)
@@ -82,7 +82,7 @@ Or download the release for your platform (includes engine binary and Python SDK
 
 - [Architecture](docs/ARCHITECTURE.md) — How it works
 - [Benchmarks](docs/BENCHMARKS.md) — Real numbers
-- [Durability & crash recovery](docs/ACID.md) — What we prove
+- [Durability & crash recovery](docs/CRASH_TESTING.md) — What we prove
 - [API](docs/API.md) — How to use it
 - [Quick Start](docs/QUICKSTART.md) — 5-minute walkthrough
 
@@ -90,10 +90,9 @@ Or download the release for your platform (includes engine binary and Python SDK
 
 See what the tools produce before running them:
 
-- [Verified crash recovery](examples/verified_crash_recovery_output.txt) — Full run from Jetson
-- [Crash recovery (condensed)](examples/crash_recovery_output.txt)
-- [Latency diagnostic](examples/latency_diagnostic_output.txt)
-- [WAL test results](examples/wal_test_output.txt)
+- [Crash recovery](examples/crash_recovery_output.txt) — SIGKILL + WAL recovery proof
+- [Latency diagnostic](examples/latency_diagnostic_output.txt) — Real benchmark output
+- [WAL test results](examples/wal_test_output.txt) — Durability test suite
 
 ## Examples (Python)
 

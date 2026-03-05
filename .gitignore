@@ -29,7 +29,8 @@ scripts/
 scripts/**
 
 # === Docs pending redaction (untrack until secret-sauce removed) ===
-# (none – redactions complete; ARCHITECTURE, JEPSEN, LAUNCH_PLAN, WINDOWS_LINUX, LINUX_COHESION, RELEASE, SYNRIX_AION_OMEGA are now public-safe)
+docs/SYNRIX_AION_OMEGA_SYSTEM_WRITEUP.md
+examples/learning_iteration_output.txt
 
 # === C source (build locally; release binaries via GitHub Releases) ===
 src/
