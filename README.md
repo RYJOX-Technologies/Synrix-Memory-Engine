@@ -59,11 +59,11 @@ If `synrix install-engine` fails, download the engine from the [latest release](
 
 - **Crash recovery**: Write 500 nodes, crash mid-write (SIGKILL), recover perfectly. Zero data loss.
 - **Latency**: Single-digit microsecond queries (192 ns hot, 3.2 μs warm)
-- **O(k) scaling**: Query cost scales with result count, not corpus size
+- **O(k) scaling**: Query latency depends on result count, not dataset size. Find 50 matches in 1K nodes or 500K nodes — same microseconds.
 
 ## What Is Synrix?
 
-Synrix is a **durable, crash-safe database** for AI agents. It stores knowledge as a **binary lattice** — dense, cache-aligned nodes in memory-mapped files. No embeddings. No vector search. Just prefix-semantic retrieval that scales O(k) with matches, not O(N) with corpus size. Single-operation atomicity, WAL + fsync; no multi-op transactions.
+Synrix is a **durable, crash-safe database** for AI agents. It stores knowledge as a **binary lattice** — dense, cache-aligned nodes in memory-mapped files. No embeddings. No vector search. No AI model required. Just prefix queries that only scan matching results (O(k)), not your entire dataset. Single-operation atomicity, WAL + fsync; no multi-op transactions.
 
 | | Synrix | Mem0 | Qdrant | ChromaDB |
 |---|---|---|---|---|
