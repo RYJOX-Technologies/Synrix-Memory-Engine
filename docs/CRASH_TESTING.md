@@ -1,4 +1,4 @@
-# Synrix: Jepsen-Style Crash Testing
+# Synrix: Crash Recovery Testing
 
 **We prove durability and crash recovery—not full ACID.**
 
@@ -8,7 +8,7 @@
 
 Synrix does **not** provide full ACID (no multi-op transactions, no serializable isolation). We do prove **durability** and **crash recovery** under worst-case scenarios.
 
-Synrix uses **Jepsen-style crash injection testing** to prove:
+Synrix uses **kill-9 crash testing** to prove:
 
 - Crash injection (SIGKILL mid-write)
 - WAL recovery verification
@@ -102,7 +102,7 @@ Killed
 > **Synrix has proven crash recovery and durable writes (WAL + fsync).**
 >
 > We validate it:
-> - Jepsen-style crash injection (SIGKILL)
+> - Kill-9 crash injection (SIGKILL)
 > - 100 crash scenarios tested
 > - Durability validated under corruption
 > - Concurrency tested under load
