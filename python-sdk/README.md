@@ -3,11 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**Python SDK for SYNRIX - A local-first semantic memory system for AI applications**
+**Python SDK for SYNRIX - A local-first prefix-indexed memory store for AI agents**
 
-SYNRIX provides persistent semantic memory for AI systems, enabling them to remember, reason, and learn over time. This SDK is the Python client library that connects to the SYNRIX engine.
+SYNRIX provides persistent, crash-safe storage for AI agents. Agents store structured data by name, retrieve it by prefix, and survive crashes without data loss. This SDK is the Python client library that connects to the SYNRIX engine.
 
-**⚠️ Important:** SYNRIX is a **semantic memory system**, not a traditional knowledge graph. SYNRIX does **not** support arbitrary graph traversal, edge queries, or RDF-style relations. It uses prefix-based semantic queries optimized for agent memory workloads.
+**⚠️ Important:** SYNRIX is a **prefix key-value store**, not a knowledge graph or semantic search engine. SYNRIX does **not** support graph traversal, similarity search, or embedding-based retrieval. It uses exact prefix string matching optimized for structured agent memory workloads.
 
 ---
 
@@ -87,39 +87,39 @@ node_id = client.add_node(
     collection="knowledge_base"
 )
 
-# Query by prefix (O(k) semantic search)
+# Query by prefix (O(k) prefix search)
 results = client.query_prefix("ISA_", collection="knowledge_base")
 print(f"Found {len(results)} nodes")
 ```
 
-**That's it!** You now have a working SYNRIX semantic memory system.
+**That's it!** You now have a working SYNRIX agent memory store.
 
 ---
 
 ## 📖 What is SYNRIX?
 
-SYNRIX is a **local-first semantic memory system** designed for AI applications. It provides:
+SYNRIX is a **local-first prefix-indexed memory store** designed for AI agents. It provides:
 
-- **Persistent Semantic Memory** - AI systems can remember what they've learned
-- **O(k) Semantic Queries** - Prefix-based search that scales with results, not data
+- **Persistent Agent Memory** - AI agents can store and retrieve structured data across sessions
+- **O(k) Prefix Queries** - Prefix-based search that scales with results, not dataset size
 - **Local-First Architecture** - Everything runs on your machine, zero vendor lock-in
 - **Local, bounded latency** - End-to-end typically ~1ms on local hardware (cold reads depend on storage)
 - **Deterministic Behavior** - Same query = same result, always
 
 **Think of it as:**
 - The **long-term memory** for AI agents
-- A **semantic index** that scales with results, not data
-- A **local-first** alternative to cloud vector databases
+- A **prefix index** that scales with results, not data
+- A **local-first** alternative to cloud key-value stores
 
 **⚠️ What SYNRIX is NOT:**
-- ❌ Not a general-purpose knowledge graph (no graph traversal, no edge queries, no SPARQL/RDF)
-- ❌ Not a vector database (no native similarity search; embeddings can be stored but aren't queryable via similarity)
+- ❌ Not a knowledge graph (no graph traversal, no edge queries, no SPARQL/RDF)
+- ❌ Not a vector database (no similarity search; it does prefix string matching only)
 - ❌ Not a traditional database (no SQL, no flexible schemas)
-- ✅ It's a **semantic memory system** optimized for structured agent memory
+- ✅ It's a **prefix key-value store** optimized for structured agent memory
 
-**Why not a knowledge graph?** SYNRIX uses prefix-based semantic naming and O(k) retrieval; it does not support graph traversal, edges, or RDF. It is optimized for agent memory and structured semantic data.
+**Why not a knowledge graph?** SYNRIX uses prefix-based naming and O(k) retrieval; it does not support graph traversal, edges, or RDF. It is optimized for agent memory with predictable, deterministic prefix queries.
 
-### Semantic Memory System vs Vector Database
+### Prefix Store vs Vector Database
 
 **SYNRIX is NOT a full replacement for vector databases.** They solve different problems:
 
@@ -158,7 +158,7 @@ If you have 1 million nodes but only 100 match `ISA_*`, a SYNRIX query only scan
 - Use **Vector DB** for document retrieval (RAG, similarity search)
 - Best of both worlds: fast structured queries + fuzzy document search
 
-**Key Insight:** SYNRIX excels at **structured semantic memory**, while vector DBs excel at **unstructured similarity search**. They complement each other.
+**Key Insight:** SYNRIX excels at **structured, prefix-queryable agent memory**, while vector DBs excel at **unstructured similarity search**. They complement each other.
 
 ---
 
@@ -182,7 +182,7 @@ If you have 1 million nodes but only 100 match `ISA_*`, a SYNRIX query only scan
 
 **You need BOTH:**
 1. **SDK** (this repo) - The Python client library
-2. **Engine** (separate download) - The actual semantic memory server
+2. **Engine** (separate download) - The native storage engine binary
 
 ---
 
@@ -216,10 +216,10 @@ results = client.query_prefix("AGENT_123:LEARNING_PATTERN:", limit=10)
 - `TENANT_*:` - For multi-tenant systems
 
 ### Code Pattern Storage
-Store discovered code patterns with semantic prefixes:
+Store discovered code patterns with structured prefixes:
 
 ```python
-# System nodes use strict semantic prefixes
+# System nodes use strict name prefixes
 client.add_node("ISA_ADD", "Addition operation")
 client.add_node("PATTERN_LOOP", "For loop pattern")
 client.add_node("CONSTRAINT_NO_REGEX", "No regex constraint")
@@ -499,13 +499,13 @@ Yes! The evaluation engine (`synrix-server-evaluation-*`) is free for local deve
 
 ### Is SYNRIX a general-purpose database?
 
-**No.** SYNRIX is optimized for structured semantic memory and agent workloads. If you need:
+**No.** SYNRIX is a purpose-built prefix key-value store for agent memory workloads. If you need:
 - **Flexible schemas** → Use a traditional database (PostgreSQL, MongoDB)
 - **Ad-hoc queries** → Use a traditional database
 - **Document similarity search** → Use a vector database (Pinecone, Qdrant)
 - **Graph traversal** → Use a graph database (Neo4j, ArangoDB)
 
-SYNRIX is specifically designed for **agent memory** and **structured semantic data** with prefix-based queries.
+SYNRIX is specifically designed for **agent memory** and **structured, prefix-queryable data** where you control the naming scheme.
 
 ---
 

@@ -9,16 +9,23 @@ import sys
 import platform
 import subprocess
 import shutil
+import zipfile
+import tempfile
 from pathlib import Path
 from typing import Optional, Tuple
 import requests
 from .exceptions import SynrixError
 
 
-# Engine download: set SYNRIX_ENGINE_DOWNLOAD_BASE_URL for auto-download (no default)
-ENGINE_BASE_URL = os.getenv("SYNRIX_ENGINE_DOWNLOAD_BASE_URL", "").strip()
-ENGINE_VERSION = "0.1.0"
+# Engine download: default to GitHub release tag Synrix-Memory-Engine
+# Windows: downloads synrix-windows-release.zip, extracts and uses the .exe inside
+# Override env: SYNRIX_ENGINE_DOWNLOAD_BASE_URL, SYNRIX_ENGINE_DOWNLOAD_FILENAME (asset to download),
+#               SYNRIX_ENGINE_FILENAME (installed exe name), SYNRIX_ENGINE_VERSION
 GITHUB_RELEASES = "https://github.com/RYJOX-Technologies/Synrix-Memory-Engine/releases"
+_DEFAULT_TAG = "Synrix-Memory-Engine"  # https://github.com/.../releases/tag/Synrix-Memory-Engine
+ENGINE_VERSION = os.getenv("SYNRIX_ENGINE_VERSION", "0.5.0").strip() or "0.5.0"
+_DEFAULT_DOWNLOAD_BASE = f"{GITHUB_RELEASES}/download/{_DEFAULT_TAG}"
+ENGINE_BASE_URL = os.getenv("SYNRIX_ENGINE_DOWNLOAD_BASE_URL", _DEFAULT_DOWNLOAD_BASE).strip() or _DEFAULT_DOWNLOAD_BASE
 
 
 def get_platform_string() -> str:
@@ -44,10 +51,14 @@ def get_platform_string() -> str:
 
 
 def get_engine_filename() -> str:
-    """Get engine binary filename for current platform."""
+    """Get engine binary filename for current platform. Override with SYNRIX_ENGINE_FILENAME."""
+    custom = os.getenv("SYNRIX_ENGINE_FILENAME", "").strip()
+    if custom:
+        return custom
     platform_str = get_platform_string()
     if platform_str.startswith("windows"):
-        return f"synrix-server-evaluation-{ENGINE_VERSION}-{platform_str}.exe"
+        # Zip contains synrix.exe; we install as synrix.exe
+        return "synrix.exe"
     else:
         return f"synrix-server-evaluation-{ENGINE_VERSION}-{platform_str}"
 
@@ -59,6 +70,16 @@ def get_engine_path() -> Path:
     engine_dir = home / ".synrix" / "bin"
     engine_dir.mkdir(parents=True, exist_ok=True)
     return engine_dir / get_engine_filename()
+
+
+def _get_download_filename() -> str:
+    """Asset filename to download (may be .zip on Windows). Override with SYNRIX_ENGINE_DOWNLOAD_FILENAME."""
+    custom = os.getenv("SYNRIX_ENGINE_DOWNLOAD_FILENAME", "").strip()
+    if custom:
+        return custom
+    if platform.system().lower() == "windows":
+        return "synrix-windows-release.zip"
+    return get_engine_filename()
 
 
 def find_engine() -> Optional[Path]:
@@ -113,7 +134,7 @@ def check_engine_running(port: int = 6334) -> bool:
 
 
 def download_engine(progress: bool = True) -> Path:
-    """Download SYNRIX engine binary.
+    """Download SYNRIX engine binary (or zip on Windows; then extract and use .exe inside).
     
     Args:
         progress: Show download progress
@@ -125,7 +146,7 @@ def download_engine(progress: bool = True) -> Path:
         SynrixError: If download fails
     """
     platform_str = get_platform_string()
-    engine_filename = get_engine_filename()
+    download_filename = _get_download_filename()
     engine_path = get_engine_path()
     
     if not ENGINE_BASE_URL:
@@ -133,20 +154,43 @@ def download_engine(progress: bool = True) -> Path:
             "Engine auto-download is not configured. Set SYNRIX_ENGINE_DOWNLOAD_BASE_URL to a base URL, "
             f"or download the engine manually from {GITHUB_RELEASES}"
         )
-    download_url = f"{ENGINE_BASE_URL.rstrip('/')}/{engine_filename}"
+    download_url = f"{ENGINE_BASE_URL.rstrip('/')}/{download_filename}"
     
     print(f"Downloading SYNRIX engine for {platform_str}...")
-    print(f"URL: {download_url}")
     
     try:
-        response = requests.get(download_url, stream=True, timeout=30)
-        response.raise_for_status()
+        # Use GitHub API to get asset URL first (direct release URL often 404s from scripts)
+        if "github.com" in ENGINE_BASE_URL and "releases/download" in ENGINE_BASE_URL:
+            api_url = "https://api.github.com/repos/RYJOX-Technologies/Synrix-Memory-Engine/releases/tags/Synrix-Memory-Engine"
+            r = requests.get(api_url, timeout=15, headers={"Accept": "application/vnd.github+json", "User-Agent": "Synrix-Engine-Installer/1.0"})
+            r.raise_for_status()
+            data = r.json()
+            assets = data.get("assets") or []
+            asset = next((a for a in assets if a.get("name") == download_filename), None)
+            if not asset:
+                raise SynrixError(f"Asset {download_filename} not found in release. Available: {[a.get('name') for a in assets]}")
+            asset_url = asset.get("url")
+            if not asset_url:
+                raise SynrixError("Release asset has no URL")
+            print(f"URL: GitHub release asset (via API)")
+            response = requests.get(asset_url, stream=True, timeout=90, headers={"Accept": "application/octet-stream", "User-Agent": "Synrix-Engine-Installer/1.0"}, allow_redirects=True)
+            response.raise_for_status()
+        else:
+            print(f"URL: {download_url}")
+            response = requests.get(download_url, stream=True, timeout=60, headers={"Accept": "application/octet-stream", "User-Agent": "Synrix-Engine-Installer/1.0"}, allow_redirects=True)
+            response.raise_for_status()
         
         total_size = int(response.headers.get("content-length", 0))
         downloaded = 0
         
-        with open(engine_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+        is_zip = download_filename.lower().endswith(".zip")
+        if is_zip:
+            dest = Path(tempfile.gettempdir()) / download_filename
+        else:
+            dest = engine_path
+        
+        with open(dest, "wb") as f:
+            for chunk in response.iter_content(chunk_size=65536):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
@@ -157,11 +201,35 @@ def download_engine(progress: bool = True) -> Path:
         if progress:
             print()  # New line after progress
         
-        # Make executable (Unix-like systems)
-        if not platform_str.startswith("windows"):
-            os.chmod(engine_path, 0o755)
+        if is_zip:
+            # Extract zip and find the .exe; copy exe + all files in same dir (DLLs) to engine_path.parent
+            extract_dir = dest.with_suffix("")
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                with zipfile.ZipFile(dest, "r") as zf:
+                    zf.extractall(extract_dir)
+                exes = list(Path(extract_dir).rglob("*.exe"))
+                # Prefer synrix.exe, then any exe with "synrix" in the name
+                synrix_exe = next((p for p in exes if p.name.lower() == "synrix.exe"), None)
+                synrix_exes = [p for p in exes if "synrix" in p.name.lower()]
+                chosen = ([synrix_exe] if synrix_exe else synrix_exes) or exes
+                if not chosen:
+                    raise SynrixError("No .exe found in synrix-windows-release.zip")
+                src_exe = chosen[0]
+                engine_dir = engine_path.parent
+                # Copy entire folder so DLLs sit next to the exe (Windows needs them in same dir)
+                for f in src_exe.parent.iterdir():
+                    if f.is_file():
+                        shutil.copy2(f, engine_dir / f.name)
+            finally:
+                dest.unlink(missing_ok=True)
+                shutil.rmtree(extract_dir, ignore_errors=True)
+        else:
+            # Make executable (Unix-like systems)
+            if not platform_str.startswith("windows"):
+                os.chmod(engine_path, 0o755)
         
-        print(f"✅ Engine downloaded to: {engine_path}")
+        print(f"[OK] Engine downloaded to: {engine_path}")
         return engine_path
         
     except requests.exceptions.RequestException as e:
@@ -169,12 +237,12 @@ def download_engine(progress: bool = True) -> Path:
     except Exception as e:
         # Clean up partial download
         if engine_path.exists():
-            engine_path.unlink()
+            engine_path.unlink(missing_ok=True)
         raise SynrixError(f"Failed to install engine: {e}")
 
 
 def verify_engine(engine_path: Path) -> bool:
-    """Verify that engine binary works."""
+    """Verify that engine binary runs (--version for server builds; fallback run for CLI-only)."""
     try:
         result = subprocess.run(
             [str(engine_path), "--version"],
@@ -182,9 +250,26 @@ def verify_engine(engine_path: Path) -> bool:
             timeout=5,
             text=True
         )
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True
+        # Windows release zip may contain CLI-only binary (no --version); accept "runs and prints something"
+        if sys.platform == "win32" and (result.stdout or result.stderr):
+            return True
     except Exception:
-        return False
+        pass
+    try:
+        r = subprocess.run(
+            [str(engine_path)],
+            capture_output=True,
+            timeout=5,
+            text=True,
+            cwd=engine_path.parent,
+        )
+        if r.returncode in (0, 1) and (r.stdout or r.stderr):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def install_engine(force: bool = False) -> Path:
@@ -205,10 +290,10 @@ def install_engine(force: bool = False) -> Path:
     if engine_path.exists() and not force:
         print(f"Engine already installed at: {engine_path}")
         if verify_engine(engine_path):
-            print("✅ Engine verified and ready to use")
+            print("[OK] Engine verified and ready to use")
             return engine_path
         else:
-            print("⚠️  Existing engine failed verification, re-downloading...")
+            print("[!] Existing engine failed verification, re-downloading...")
             engine_path.unlink()
     
     # Download engine
@@ -217,7 +302,7 @@ def install_engine(force: bool = False) -> Path:
         
         # Verify
         if verify_engine(engine_path):
-            print("✅ Engine installed and verified")
+            print("[OK] Engine installed and verified")
             return engine_path
         else:
             raise SynrixError("Downloaded engine failed verification")

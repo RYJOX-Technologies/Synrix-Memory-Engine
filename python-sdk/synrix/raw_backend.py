@@ -14,8 +14,11 @@ Usage:
 """
 
 import ctypes
+import json
 import os
 import sys
+import urllib.request
+import urllib.error
 from typing import Optional, List, Dict, Any
 from ctypes import Structure, Union, c_uint64, c_uint32, c_char, c_double, c_bool, POINTER, c_int, c_char_p, byref
 
@@ -172,6 +175,90 @@ class LicenseClaims(Structure):
     ]
 
 
+# Cloud license: same env as scripts/license (Supabase check-license)
+SYNRIX_LICENSE_API_URL = os.environ.get("SYNRIX_LICENSE_API_URL", "").strip()
+
+
+def _resolve_license_key() -> Optional[str]:
+    """Resolve license key: SYNRIX_LICENSE_KEY env, then ~/.synrix/license.json (or %AppData%\\Synrix\\license.json)."""
+    key = os.environ.get("SYNRIX_LICENSE_KEY", "").strip()
+    if key:
+        return key
+    if sys.platform == "win32":
+        config_dir = os.environ.get("APPDATA", "")
+        if config_dir:
+            path = os.path.join(config_dir, "Synrix", "license.json")
+        else:
+            path = os.path.join(os.path.expanduser("~"), ".synrix", "license.json")
+    else:
+        path = os.path.join(os.path.expanduser("~"), ".synrix", "license.json")
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        key = data.get("license_key") or data.get("license_b64")
+        return key.strip() if isinstance(key, str) else None
+    except Exception:
+        return None
+
+
+def _fetch_cloud_license_claims(key: str, hwid: str, api_url: str) -> Optional[LicenseClaims]:
+    """GET check-license API (key= & hwid=), parse JSON into LicenseClaims. Returns None on failure."""
+    try:
+        url = f"{api_url.rstrip('/')}?key={urllib.parse.quote(key)}&hwid={urllib.parse.quote(hwid)}"
+        req = urllib.request.Request(url, method="GET")
+        anon_key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
+        if anon_key:
+            req.add_header("Authorization", "Bearer %s" % anon_key)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError):
+        return None
+    if not data.get("valid"):
+        return None
+    claims = LicenseClaims()
+    claims.node_limit = int(data.get("node_limit", 0))
+    exp_val = data.get("expires")
+    if exp_val is None:
+        claims.exp = int(__import__("time").time()) + 365 * 24 * 3600
+    elif isinstance(exp_val, (int, float)):
+        claims.exp = int(exp_val)
+    elif isinstance(exp_val, str):
+        try:
+            from datetime import datetime
+            claims.exp = int(datetime.fromisoformat(exp_val.replace("Z", "+00:00")).timestamp())
+        except Exception:
+            claims.exp = int(__import__("time").time()) + 365 * 24 * 3600
+    else:
+        claims.exp = int(__import__("time").time()) + 365 * 24 * 3600
+    claims.iat = int(data.get("iat", 0)) or int(__import__("time").time())
+    tier_str = (data.get("tier") or "STARTER")[:31]
+    tier_bytes = tier_str.encode("utf-8").ljust(32, b"\0")[:32]
+    for i in range(32):
+        claims.tier[i] = tier_bytes[i]
+    return claims
+
+
+def get_hardware_id_standalone() -> Optional[str]:
+    """Get HWID from the engine lib without opening a lattice (for CLI license check/sync)."""
+    lib_path = _find_synrix_lib()
+    if not lib_path:
+        return None
+    try:
+        lib = ctypes.CDLL(lib_path)
+        if not hasattr(lib, "lattice_get_hardware_id"):
+            return None
+        lib.lattice_get_hardware_id.argtypes = [c_char_p, ctypes.c_size_t]
+        lib.lattice_get_hardware_id.restype = c_int
+        buf = ctypes.create_string_buffer(65)
+        if lib.lattice_get_hardware_id(buf, 65) == 0:
+            return buf.value.decode("utf-8")
+    except Exception:
+        pass
+    return None
+
+
 # Payload union members (largest is lattice_learning_t at 288 bytes)
 class LatticeLearning(Structure):
     """lattice_learning_t structure"""
@@ -194,15 +281,26 @@ class LatticePayload(Union):
     ]
 
 class LatticeNode(Structure):
-    """C lattice_node_t structure - MUST match C struct exactly"""
+    """
+    C lattice_node_t structure — MUST match C struct layout exactly.
+
+    Note on parent_id / child_count / children:
+        These fields exist in the C struct and are stored on disk. The C engine
+        accepts a parent_id argument in lattice_add_node() and records it in the
+        node. However, the Python SDK does not expose tree traversal — there is
+        no find_children(), get_subtree(), or walk_graph() call. The fields are
+        present for forward compatibility and can be read from a returned node,
+        but no SDK method currently builds or traverses the hierarchy.
+        Do not advertise graph or tree capabilities based on their presence.
+    """
     _fields_ = [
         ("id", c_uint64),
         ("type", c_uint32),  # lattice_node_type_t
         ("name", c_char * 64),
         ("data", c_char * 512),
-        ("parent_id", c_uint64),
-        ("child_count", c_uint32),
-        ("children", POINTER(c_uint64)),
+        ("parent_id", c_uint64),    # stored on disk; no SDK traversal
+        ("child_count", c_uint32),  # stored on disk; no SDK traversal
+        ("children", POINTER(c_uint64)),  # runtime pointer only; null on disk
         ("confidence", c_double),
         ("timestamp", c_uint64),
         ("payload", LatticePayload),  # CRITICAL: Must include payload union
@@ -225,7 +323,7 @@ class RawSynrixBackend:
     
     Performance:
         - O(1) lookups: ~0.1-1.0μs (raw C)
-        - O(k) semantic queries: ~10-100μs (raw C)
+        - O(k) prefix queries: ~10-100μs (raw C)
         - No Python overhead, no serialization
     """
     
@@ -379,11 +477,6 @@ class RawSynrixBackend:
             self.lib.lattice_get_last_error.argtypes = [POINTER(ctypes.c_void_p)]
             self.lib.lattice_get_last_error.restype = c_int
         
-        # lattice_disable_evaluation_mode(lattice) -> int
-        if hasattr(self.lib, 'lattice_disable_evaluation_mode'):
-            self.lib.lattice_disable_evaluation_mode.argtypes = [POINTER(ctypes.c_void_p)]
-            self.lib.lattice_disable_evaluation_mode.restype = c_int
-        
         # lattice_get_hardware_id(hwid_out, hwid_size) -> int
         if hasattr(self.lib, 'lattice_get_hardware_id'):
             self.lib.lattice_get_hardware_id.argtypes = [c_char_p, ctypes.c_size_t]
@@ -422,25 +515,38 @@ class RawSynrixBackend:
         if result != 0:
             raise RuntimeError(f"Failed to initialize lattice: error code {result}")
         
-        # Apply Synrix license from env / ~/.synrix/license.json when .so has license support
-        if hasattr(self.lib, 'synrix_license_parse') and hasattr(self.lib, 'lattice_apply_license'):
+        # Apply license: cloud key (synrix_cloud_*) via API, or offline key via engine parse
+        applied_license = False
+        if hasattr(self.lib, "lattice_apply_license"):
             try:
-                self.lib.synrix_license_parse.argtypes = [c_char_p, POINTER(LicenseClaims)]
-                self.lib.synrix_license_parse.restype = c_int
                 self.lib.lattice_apply_license.argtypes = [
                     POINTER(ctypes.c_void_p), POINTER(LicenseClaims)
                 ]
                 self.lib.lattice_apply_license.restype = c_int
-                claims = LicenseClaims()
-                if self.lib.synrix_license_parse(None, byref(claims)) == 0:
+                claims = None
+                key = _resolve_license_key()
+                # Cloud license: key like synrix_cloud_xxx + SYNRIX_LICENSE_API_URL (e.g. Supabase check-license)
+                if key and key.startswith("synrix_cloud_") and SYNRIX_LICENSE_API_URL and hasattr(self.lib, "lattice_get_hardware_id"):
+                    hwid_buf = ctypes.create_string_buffer(65)
+                    if self.lib.lattice_get_hardware_id(hwid_buf, 65) == 0:
+                        hwid = hwid_buf.value.decode("utf-8")
+                        claims = _fetch_cloud_license_claims(key, hwid, SYNRIX_LICENSE_API_URL)
+                # Offline key: engine parses key from env / file
+                if claims is None and hasattr(self.lib, "synrix_license_parse"):
+                    self.lib.synrix_license_parse.argtypes = [c_char_p, POINTER(LicenseClaims)]
+                    self.lib.synrix_license_parse.restype = c_int
+                    claims = LicenseClaims()
+                    if self.lib.synrix_license_parse(None, byref(claims)) == 0:
+                        pass
+                    else:
+                        claims = None
+                if claims is not None:
                     self.lib.lattice_apply_license(
                         ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)), byref(claims)
                     )
-            except (AttributeError, TypeError):
+                    applied_license = True
+            except (AttributeError, TypeError, Exception):
                 pass
-        # Disable evaluation mode if requested (unlimited nodes)
-        elif not evaluation_mode and hasattr(self.lib, 'lattice_disable_evaluation_mode'):
-            self.lib.lattice_disable_evaluation_mode(ctypes.cast(self.lattice_ptr, POINTER(ctypes.c_void_p)))
         
         # Setup lattice_build_prefix_index if available
         if hasattr(self.lib, 'lattice_build_prefix_index'):
@@ -450,13 +556,16 @@ class RawSynrixBackend:
     def add_node(self, name: str, data: str, node_type: int = LATTICE_NODE_LEARNING, 
                  parent_id: int = 0) -> int:
         """
-        Add a node to the lattice.
+        Add a node to the prefix store.
         
         Args:
-            name: Node name (e.g., "TASK:write_function")
+            name: Node name (must use a valid semantic prefix, e.g. "TASK:write_fn")
             data: Node data (string, max 512 bytes)
             node_type: Node type (default: LATTICE_NODE_LEARNING)
-            parent_id: Parent node ID (0 = no parent)
+            parent_id: Parent node ID (0 = no parent). The value is stored in the
+                node on disk, but no SDK method currently traverses parent/child
+                relationships. Pass 0 unless you are reading parent_id back for
+                your own bookkeeping.
         
         Returns:
             Node ID (uint64), or 0 on failure
@@ -730,7 +839,128 @@ class RawSynrixBackend:
         self.lib.lattice_free_node_copy(node_ptr)
         
         return result_dict
-    
+
+    def get_children(self, parent_id: int, prefix_hint: str = "",
+                     limit: int = 1000) -> List[Dict[str, Any]]:
+        """
+        Return all nodes whose parent_id matches the given ID.
+
+        Two-phase approach:
+        1. If prefix_hint is provided, use the O(k) prefix index to narrow
+           the candidate set before filtering — fast path for agents that use
+           structured prefix naming (e.g. prefix_hint="TASK:solve_problem:").
+        2. Without a hint, falls back to a broader prefix scan filtered by
+           parent_id — still correct, slightly slower on large datasets.
+
+        Args:
+            parent_id:    ID of the parent node whose children to retrieve.
+            prefix_hint:  Optional prefix that all children share. Providing
+                          this makes the query O(k) on the child count rather
+                          than O(n) on the full dataset. Recommended for agents
+                          that embed hierarchy in their prefix scheme.
+            limit:        Maximum number of children to return.
+
+        Returns:
+            List of node dicts (same format as get_node()), ordered by
+            ascending node ID (i.e. insertion order).
+
+        Example:
+            root_id = db.add_node("TASK:solve:root", "...", parent_id=0)
+            db.add_node("TASK:solve:step_1", "...", parent_id=root_id)
+            db.add_node("TASK:solve:step_2", "...", parent_id=root_id)
+            children = db.get_children(root_id, prefix_hint="TASK:solve:")
+        """
+        candidates = self.find_by_prefix(prefix_hint, limit=limit, raw=False)
+        return sorted(
+            [n for n in candidates if n.get("parent_id") == parent_id],
+            key=lambda n: n.get("id", 0)
+        )
+
+    def get_subtree(self, root_id: int, prefix_hint: str = "",
+                    max_depth: int = 16, limit: int = 10000) -> Dict[str, Any]:
+        """
+        Return the full subtree rooted at root_id as a nested dict.
+
+        Uses iterative BFS via get_children() at each level. Depth is capped
+        at max_depth to prevent runaway traversal on cyclic or malformed data.
+
+        Args:
+            root_id:     ID of the root node.
+            prefix_hint: Passed to get_children() at every level. Effective
+                         when all descendants share a common prefix.
+            max_depth:   Maximum tree depth to traverse (default 16).
+            limit:       Maximum total nodes to visit across the whole tree.
+
+        Returns:
+            Dict with keys: 'node' (the root node dict) and 'children'
+            (list of subtree dicts in the same shape, recursively).
+            Returns None if root_id is not found.
+
+        Example:
+            tree = db.get_subtree(root_id, prefix_hint="TASK:solve:")
+            # tree == {
+            #   "node": {...},
+            #   "children": [
+            #     {"node": {...}, "children": [...]},
+            #     {"node": {...}, "children": []},
+            #   ]
+            # }
+        """
+        root = self.get_node(root_id)
+        if root is None:
+            return None
+
+        visited = 0
+
+        def _build(node_dict: Dict, depth: int) -> Dict:
+            nonlocal visited
+            visited += 1
+            result = {"node": node_dict, "children": []}
+            if depth >= max_depth or visited >= limit:
+                return result
+            for child in self.get_children(node_dict["id"], prefix_hint=prefix_hint):
+                result["children"].append(_build(child, depth + 1))
+            return result
+
+        return _build(root, 0)
+
+    def get_ancestors(self, node_id: int, max_depth: int = 64) -> List[Dict[str, Any]]:
+        """
+        Walk parent_id links upward and return the ancestor chain.
+
+        Each hop is an O(1) get_node() lookup. Stops at the root (parent_id 0)
+        or after max_depth hops to guard against malformed data.
+
+        Args:
+            node_id:   ID of the node to start from (not included in output).
+            max_depth: Maximum hops upward (default 64).
+
+        Returns:
+            List of node dicts from immediate parent to root, i.e. index 0 is
+            the direct parent, last index is the root ancestor.
+
+        Example:
+            ancestors = db.get_ancestors(leaf_node_id)
+            root = ancestors[-1]  # topmost node in the chain
+        """
+        ancestors = []
+        current_id = node_id
+        seen = set()
+        for _ in range(max_depth):
+            node = self.get_node(current_id)
+            if node is None:
+                break
+            pid = node.get("parent_id", 0)
+            if pid == 0 or pid in seen:
+                break
+            seen.add(pid)
+            parent = self.get_node(pid)
+            if parent is None:
+                break
+            ancestors.append(parent)
+            current_id = pid
+        return ancestors
+
     def find_by_prefix(self, prefix: str, limit: int = 100, raw: bool = True) -> List[Dict[str, Any]]:
         """
         Find nodes by name prefix (O(k) semantic search).

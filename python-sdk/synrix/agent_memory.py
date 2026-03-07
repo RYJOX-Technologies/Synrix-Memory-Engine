@@ -80,7 +80,8 @@ class SynrixMemory:
         key: str,
         value: str,
         metadata: Optional[Dict[str, Any]] = None,
-        timestamp: Optional[float] = None
+        timestamp: Optional[float] = None,
+        success: Optional[bool] = None
     ) -> Optional[int]:
         """
         Store agent memory.
@@ -90,21 +91,26 @@ class SynrixMemory:
             value: Memory value (e.g., "result_failed", "success")
             metadata: Optional metadata (error details, context, etc.)
             timestamp: Optional timestamp (default: current time)
+            success: Explicit outcome flag. Pass True/False to enable reliable
+                     failure/success filtering. If omitted, outcome filtering
+                     falls back to value string inspection which is less reliable.
         
         Returns:
             Node ID if successful, None otherwise
         
         Example:
-            >>> memory.write("task:1:attempt", "result_failed", {"error": "timeout"})
+            >>> memory.write("task:1:attempt", "timeout on stripe", {"error": "timeout"}, success=False)
         """
         if timestamp is None:
             timestamp = time.time()
         
-        data = {
+        data: Dict[str, Any] = {
             "value": value,
             "metadata": metadata or {},
-            "timestamp": timestamp
+            "timestamp": timestamp,
         }
+        if success is not None:
+            data["success"] = success
         
         data_str = json.dumps(data)
         return self.client.add_node(key, data_str, collection=self.collection)
@@ -245,8 +251,16 @@ class SynrixMemory:
             
             try:
                 data = json.loads(data_str)
-                value = data.get("value", "").lower()
-                if "fail" in value or "error" in value or "timeout" in value:
+                # Prefer explicit success flag written by write(success=False).
+                # Fall back to value string inspection only when flag is absent
+                # (e.g. records written before this field was introduced).
+                if "success" in data:
+                    is_failure = data["success"] is False
+                else:
+                    value = data.get("value", "").lower()
+                    is_failure = "fail" in value or "error" in value or "timeout" in value
+                
+                if is_failure:
                     failures.append({
                         "key": payload.get("name", ""),
                         "value": data.get("value", ""),
@@ -254,13 +268,7 @@ class SynrixMemory:
                         "timestamp": data.get("timestamp", 0)
                     })
             except json.JSONDecodeError:
-                if "fail" in data_str.lower() or "error" in data_str.lower():
-                    failures.append({
-                        "key": payload.get("name", ""),
-                        "value": data_str,
-                        "metadata": {},
-                        "timestamp": 0
-                    })
+                continue
         
         return failures
     
@@ -288,8 +296,15 @@ class SynrixMemory:
             
             try:
                 data = json.loads(data_str)
-                value = data.get("value", "").lower()
-                if "success" in value or "complete" in value or "ok" in value:
+                # Prefer explicit success flag; fall back to string inspection
+                # for records written before the flag was introduced.
+                if "success" in data:
+                    is_success = data["success"] is True
+                else:
+                    value = data.get("value", "").lower()
+                    is_success = "success" in value or "complete" in value or "ok" in value
+                
+                if is_success:
                     successes.append({
                         "key": payload.get("name", ""),
                         "value": data.get("value", ""),
@@ -297,13 +312,7 @@ class SynrixMemory:
                         "timestamp": data.get("timestamp", 0)
                     })
             except json.JSONDecodeError:
-                if "success" in data_str.lower() or "complete" in data_str.lower():
-                    successes.append({
-                        "key": payload.get("name", ""),
-                        "value": data_str,
-                        "metadata": {},
-                        "timestamp": 0
-                    })
+                continue
         
         return successes
     
@@ -343,13 +352,19 @@ class SynrixMemory:
                 }
                 attempts.append(entry)
                 
-                if "fail" in value or "error" in value or "timeout" in value:
+                if "success" in data:
+                    is_failure = data["success"] is False
+                    is_success = data["success"] is True
+                else:
+                    is_failure = "fail" in value or "error" in value or "timeout" in value
+                    is_success = "success" in value
+
+                if is_failure:
                     failures.append(entry)
-                    # Extract error pattern
                     error = data.get("metadata", {}).get("error")
                     if error:
                         failure_patterns.add(error)
-                elif "success" in value:
+                elif is_success:
                     successes.append(entry)
             except json.JSONDecodeError:
                 continue

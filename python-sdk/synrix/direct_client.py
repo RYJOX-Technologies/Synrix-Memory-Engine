@@ -199,7 +199,7 @@ class SynrixDirectClient:
         return []
     
     def add_node(self, name: str, data: str, collection: str = "default") -> Optional[int]:
-        """Add a node to the knowledge graph"""
+        """Add a node to the prefix store"""
         # Format: "collection:name|data"
         query = f"{collection}:{name}|{data}"
         result = self._query("ADD_NODE", query)

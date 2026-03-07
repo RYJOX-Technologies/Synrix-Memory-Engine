@@ -198,4 +198,12 @@ class RoboticsNexus:
         }
 
     def clear_all(self) -> bool:
-        return True
+        """
+        Not implemented. Synrix does not expose a delete or truncate operation
+        in the current SDK. To reset robot state, delete the .lattice file and
+        reinitialise. Returns False rather than silently succeeding.
+        """
+        raise NotImplementedError(
+            "clear_all() is not supported. Synrix has no delete operation in the "
+            "current SDK. To reset state, delete the .lattice file and reinitialise."
+        )

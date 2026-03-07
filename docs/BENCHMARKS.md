@@ -9,9 +9,8 @@
 | Hot-read latency | 192 ns |
 | Warm-read average | 3.2 μs |
 | Durable write | ~28 μs |
-| Sustained ingestion | 512 MB/s |
 | Max validated scale | 500K nodes (O(k) confirmed) |
-| Max supported | 50M nodes (47.68 GB) |
+| Max tested scale | 500K nodes; higher scales extrapolated, not benchmarked |
 
 ### Windows x86_64 (Recent hardware)
 

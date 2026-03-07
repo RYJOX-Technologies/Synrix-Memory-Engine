@@ -1,28 +1,31 @@
 """
 SYNRIX Python Client SDK
 
-Python client library for interacting with the SYNRIX knowledge system.
-Requires connection to SYNRIX server (hosted service or self-hosted binary).
+Python client library for interacting with the SYNRIX prefix store engine.
+
+Core backends (pick one):
+  - RawSynrixBackend  — direct DLL/ctypes, fastest, no server needed
+  - SynrixClient      — HTTP client, requires `synrix run`
+  - SynrixMockClient  — in-memory mock for testing
+
+Agent memory helper:
+  - SynrixMemory      — structured agent memory built on top of any backend
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 import os
-import warnings
 
 from .client import SynrixClient
 from .mock import SynrixMockClient
 from .exceptions import SynrixError, SynrixConnectionError, SynrixNotFoundError
 from .agent_memory import SynrixMemory
-from .agent_backend import SynrixAgentBackend, get_synrix_backend
 from .engine import init as _engine_init, find_engine
 
 __all__ = [
     "SynrixClient",
     "SynrixMockClient",
     "SynrixMemory",
-    "SynrixAgentBackend",
-    "get_synrix_backend",
     "SynrixError",
     "SynrixConnectionError",
     "SynrixNotFoundError",

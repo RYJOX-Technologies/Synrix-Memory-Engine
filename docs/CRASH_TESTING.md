@@ -136,7 +136,7 @@ Run our test suite. Verify the claims.
 
 **Synrix:** Here's the crash test. Run it. See zero data loss.
 
-That's enterprise infrastructure.
+That's the bar for any production storage engine.
 
 ---
 

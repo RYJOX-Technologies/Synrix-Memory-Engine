@@ -171,7 +171,7 @@ class SynrixMockClient(SynrixClient):
         node_type: str = "primitive",
         collection: Optional[str] = None
     ) -> Optional[int]:
-        """Add a node to the knowledge graph"""
+        """Add a node to the prefix store"""
         if collection is None:
             collection = "nodes"
         
@@ -204,7 +204,7 @@ class SynrixMockClient(SynrixClient):
         collection: Optional[str] = None,
         limit: int = 100
     ) -> List[Dict[str, Any]]:
-        """Query nodes by prefix (O(k) semantic query)"""
+        """Query nodes by prefix (O(k) prefix search)"""
         if collection is None:
             collection = "nodes"
         

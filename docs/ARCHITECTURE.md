@@ -51,6 +51,35 @@ Each node is fixed-size and cache-aligned, with:
 - **Direct read**: `get_node(id)` → O(1)
 - **No embeddings**: Semantic naming replaces vector similarity.
 
+## Why Not SQLite?
+
+The "62 lines of SQLite" argument is valid for simple agent memory workloads — store a string, retrieve by prefix, survive a crash. For those workloads, SQLite with WAL mode and an indexed text column is a legitimate alternative with real advantages (open source, auditable, no node limits, full SQL).
+
+It breaks down for workloads that need **in-place updates to typed numeric fields in a hot execution loop**.
+
+Consider pattern learning: every time a pattern executes, its `success_rate` is updated via exponential moving average, its `frequency` incremented, its `last_used` timestamp written, and its `performance_gain` adjusted. In Synrix, this is a **direct memory write to known byte offsets within a memory-mapped struct** — the OS page is already mapped, the write goes straight to RAM, no locks, no query planner, no serialization.
+
+The SQLite equivalent:
+
+```sql
+UPDATE nodes 
+SET success_rate = (success_rate * 0.9) + (? * 0.1),
+    frequency    = frequency + 1,
+    last_used    = ?
+WHERE id = ?
+```
+
+That's a B-tree lookup, row fetch, arithmetic, row write, WAL journal entry, and eventual fsync. At thousands of pattern updates per second in a generative loop, the overhead compounds into a measurable bottleneck — not because SQLite is slow, but because it's doing work (query planning, row serialization, B-tree traversal) that is unnecessary when you already know the exact byte offset of the field you're updating.
+
+The same argument applies to confidence decay (`decay_rate` applied per time unit), trust zone transitions, and sidecar mapping updates — all of which are in-place writes to specific typed fields in the node's payload union.
+
+**The payload union is the key differentiator.** Synrix nodes carry domain-typed fields — `success_rate`, `performance_gain`, `evolution_generation`, `trust_zone`, `decay_rate` — directly in the storage format. A generic database stores these as JSON in a text column, requiring parse-update-serialize on every write. Synrix writes directly to the field. For a system making high-frequency updates to learned state, that difference is the design constraint that drove the custom storage engine.
+
+For workloads that don't need this — simple key-value storage, config, session memory — SQLite is the right tool. Synrix is purpose-built for systems that treat stored nodes as **live, updateable weighted state**, not static records.
+
+---
+
 ## Further Reading
 
 - [Benchmarks](BENCHMARKS.md)
+- [.lattice Format Spec](LATTICE_FORMAT_SPEC.md)

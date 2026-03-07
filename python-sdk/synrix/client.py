@@ -1,7 +1,7 @@
 """
 SYNRIX Python Client
 
-A client library for interacting with SYNRIX knowledge graph engine.
+A client library for interacting with the SYNRIX engine (durable prefix store for AI agent memory).
 """
 
 import json
@@ -14,7 +14,7 @@ from .telemetry import get_telemetry, record_operation
 
 class SynrixClient:
     """
-    Client for interacting with SYNRIX knowledge graph engine.
+    Client for interacting with the SYNRIX engine (durable prefix store).
     
     Args:
         host: SYNRIX server host (default: "localhost")
@@ -285,7 +285,7 @@ class SynrixClient:
         collection: Optional[str] = None
     ) -> Optional[int]:
         """
-        Add a node to the knowledge graph using native SYNRIX API.
+        Add a node using the native SYNRIX API.
         
         Nodes are stored by semantic name (e.g., "ISA_ADD") and automatically
         indexed by the dynamic prefix index for O(k) queries.
@@ -338,7 +338,7 @@ class SynrixClient:
         limit: int = 100
     ) -> List[Dict[str, Any]]:
         """
-        Query nodes by prefix using dynamic prefix index (O(k) semantic query).
+        Query nodes by prefix using the dynamic prefix index (O(k) by result count).
         
         Uses the dynamic prefix index for fast queries. Works with nodes stored
         via add_node() which stores by semantic name.

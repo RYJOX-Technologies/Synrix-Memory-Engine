@@ -35,7 +35,7 @@ static void get_test_file_path(const char* user_path, char* abs_path, size_t abs
     }
     
     // Otherwise, use dedicated test directory
-    const char* test_dir = "/tmp/aion_crash_tests";
+    const char* test_dir = "/tmp/synrix_crash_tests";
     
     // Create test directory if it doesn't exist
     struct stat st;
@@ -302,7 +302,7 @@ int test_multiple_crashes(persistent_lattice_t* lattice) {
 }
 
 int main(int argc, char* argv[]) {
-    printf("=== AION OMEGA CRASH TEST (Jepsen-Style) ===\n\n");
+    printf("=== SYNRIX CRASH TEST (WAL Recovery) ===\n\n");
     
     // Parse arguments
     if (argc < 2) {
