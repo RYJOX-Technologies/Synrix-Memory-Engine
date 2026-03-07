@@ -3,11 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**Python SDK for SYNRIX - A local-first prefix-indexed memory store for AI agents**
+Python SDK for **SYNRIX** — a local-first, crash-safe prefix store for AI agents.
 
-SYNRIX provides persistent, crash-safe storage for AI agents. Agents store structured data by name, retrieve it by prefix, and survive crashes without data loss. This SDK is the Python client library that connects to the SYNRIX engine.
+Agents write named nodes, query by prefix, and survive crashes without data loss. Queries are O(k) — speed depends on the number of results, not the size of the lattice.
 
-**⚠️ Important:** SYNRIX is a **prefix key-value store**, not a knowledge graph or semantic search engine. SYNRIX does **not** support graph traversal, similarity search, or embedding-based retrieval. It uses exact prefix string matching optimized for structured agent memory workloads.
+**SYNRIX is a prefix store.** It does not do similarity search, graph traversal, or embedding-based retrieval. If you need fuzzy document search, use a vector database. If you need structured agent memory with deterministic retrieval, use SYNRIX.
 
 ---
 
