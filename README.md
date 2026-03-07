@@ -100,7 +100,7 @@ TASK:solve_problem (root, id=1001)
     └── TASK:solve_problem:step_2:attempt_1 (parent_id=1004, id=1005)
 ```
 
-The hierarchy is stored on disk and survives crashes. Every node is at a fixed offset — O(1) access by ID regardless of depth. This is the "compressed knowledge graph on a flat plane" design: you get the contextual richness of a graph with the access speed of an array.
+The hierarchy is stored on disk and survives crashes. Every node is at a fixed offset — O(1) access by ID regardless of depth. You get contextual structure via parent/child relationships with the access speed of a flat array.
 
 The SDK exposes three traversal methods on `RawSynrixBackend`:
 

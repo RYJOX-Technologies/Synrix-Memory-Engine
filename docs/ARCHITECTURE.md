@@ -1,8 +1,8 @@
 # Synrix Architecture
 
-## What Is the Binary Lattice?
+## What Is the Lattice?
 
-Synrix stores knowledge as a **Binary Lattice** — a dense, memory-mapped array of fixed-size nodes. Not a graph. Not a key-value store. A rigid, mathematically predictable structure.
+Synrix stores data as a **lattice** — a dense, memory-mapped array of fixed-size nodes. Not a graph. Not a key-value store. A rigid, cache-optimal structure with mathematically predictable access costs.
 
 ### Core Design
 
