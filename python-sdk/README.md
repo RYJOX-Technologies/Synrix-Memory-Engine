@@ -109,13 +109,14 @@ SYNRIX is a **local-first prefix-indexed memory store** designed for AI agents. 
 **Think of it as:**
 - The **long-term memory** for AI agents
 - A **prefix index** that scales with results, not data
-- A **local-first** alternative to cloud key-value stores
+- A **local-first** alternative to cloud databases
 
-**⚠️ What SYNRIX is NOT:**
-- ❌ Not a knowledge graph (no graph traversal, no edge queries, no SPARQL/RDF)
-- ❌ Not a vector database (no similarity search; it does prefix string matching only)
-- ❌ Not a traditional database (no SQL, no flexible schemas)
-- ✅ It's a **prefix key-value store** optimized for structured agent memory
+**What SYNRIX is NOT:**
+- Not a knowledge graph (no graph traversal, no edge queries, no SPARQL/RDF)
+- Not a vector database (no similarity search; it does prefix string matching only)
+- Not a traditional database (no SQL, no flexible schemas)
+- Not a key-value store (nodes carry typed payload structs with fields like `confidence`, `decay_rate`, `success_rate` — not opaque values)
+- It's a **prefix-indexed lattice** optimized for structured agent memory
 
 **Why not a knowledge graph?** SYNRIX uses prefix-based naming and O(k) retrieval; it does not support graph traversal, edges, or RDF. It is optimized for agent memory with predictable, deterministic prefix queries.
 
@@ -499,7 +500,7 @@ Yes! The evaluation engine (`synrix-server-evaluation-*`) is free for local deve
 
 ### Is SYNRIX a general-purpose database?
 
-**No.** SYNRIX is a purpose-built prefix key-value store for agent memory workloads. If you need:
+**No.** SYNRIX is purpose-built state infrastructure for agent memory workloads. It is not a general-purpose database. If you need:
 - **Flexible schemas** → Use a traditional database (PostgreSQL, MongoDB)
 - **Ad-hoc queries** → Use a traditional database
 - **Document similarity search** → Use a vector database (Pinecone, Qdrant)
