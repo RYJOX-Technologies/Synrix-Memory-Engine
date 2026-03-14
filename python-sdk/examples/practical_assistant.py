@@ -16,6 +16,9 @@ Usage:
   # Use OpenAI-compatible API (e.g. Jetpack / cloud)
   OPENAI_API_BASE=https://... OPENAI_API_KEY=sk-... python practical_assistant.py "Hello"
 
+  # Use MiniMax API (auto-detected when MINIMAX_API_KEY is set)
+  MINIMAX_API_KEY=your-key python practical_assistant.py "Hello"
+
   # Memory-only mode (no LLM): recall and store only
   SYNRIX_ONLY=1 python practical_assistant.py "recall preference:"
 """
@@ -73,6 +76,34 @@ def call_ollama(prompt: str, model: str = "llama2", max_tokens: int = 256) -> st
         return f"(Ollama error: {e})"
 
 
+def call_minimax(prompt: str, model: str = None, max_tokens: int = 256) -> str:
+    """Call MiniMax API (OpenAI-compatible, https://api.minimax.io/v1)."""
+    try:
+        import requests
+    except ImportError:
+        return "(install requests: pip install requests)"
+    key = os.environ.get("MINIMAX_API_KEY", "")
+    if not key:
+        return "(Set MINIMAX_API_KEY for MiniMax mode)"
+    model = model or os.environ.get("MINIMAX_MODEL", "MiniMax-M2.5")
+    url = "https://api.minimax.io/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": max_tokens,
+        "temperature": 0.7,
+    }
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=60)
+        r.raise_for_status()
+        data = r.json()
+        choice = (data.get("choices") or [{}])[0]
+        return (choice.get("message") or {}).get("content", "").strip()
+    except Exception as e:
+        return f"(MiniMax error: {e})"
+
+
 def call_openai_compatible(prompt: str, model: str = None, max_tokens: int = 256) -> str:
     """Call OpenAI-compatible API (e.g. OPENAI_API_BASE)."""
     try:
@@ -113,7 +144,9 @@ def run_turn(memory, user_message: str, use_llm: bool = True) -> str:
             return f"Recalled context:\n{context}"
         return "No memories found for that query. Use remember key value to store."
 
-    if os.environ.get("OPENAI_API_BASE") and os.environ.get("OPENAI_API_KEY"):
+    if os.environ.get("MINIMAX_API_KEY"):
+        reply = call_minimax(prompt)
+    elif os.environ.get("OPENAI_API_BASE") and os.environ.get("OPENAI_API_KEY"):
         reply = call_openai_compatible(prompt)
     else:
         reply = call_ollama(prompt)
