@@ -189,6 +189,23 @@ Edge deployment is a first-class use case. An agent running on a Jetson at the e
 
 ---
 
+## LLM provider support
+
+The `practical_assistant.py` example demonstrates how to combine Synrix memory with LLM-powered replies. It supports multiple providers out of the box:
+
+| Provider | Environment variables | Model default |
+|----------|----------------------|---------------|
+| Ollama (local) | `OLLAMA_HOST` (optional) | `llama2` |
+| OpenAI-compatible | `OPENAI_API_BASE` + `OPENAI_API_KEY` | `gpt-3.5-turbo` |
+| [MiniMax](https://www.minimaxi.com) | `MINIMAX_API_KEY` | `MiniMax-M2.5` |
+
+```bash
+# MiniMax example — 204K context window, OpenAI-compatible
+MINIMAX_API_KEY=your-key python examples/practical_assistant.py "Hello"
+```
+
+---
+
 ## What Synrix is not
 
 - Not a vector database. No embeddings. Use Qdrant or ChromaDB if you need fuzzy similarity search.
