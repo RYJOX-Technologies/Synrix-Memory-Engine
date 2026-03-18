@@ -85,7 +85,7 @@ def call_minimax(prompt: str, model: str = None, max_tokens: int = 256) -> str:
     key = os.environ.get("MINIMAX_API_KEY", "")
     if not key:
         return "(Set MINIMAX_API_KEY for MiniMax mode)"
-    model = model or os.environ.get("MINIMAX_MODEL", "MiniMax-M2.5")
+    model = model or os.environ.get("MINIMAX_MODEL", "MiniMax-M2.7")
     url = "https://api.minimax.io/v1/chat/completions"
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     payload = {

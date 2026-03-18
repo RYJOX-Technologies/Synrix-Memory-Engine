@@ -197,7 +197,7 @@ The `practical_assistant.py` example demonstrates how to combine Synrix memory w
 |----------|----------------------|---------------|
 | Ollama (local) | `OLLAMA_HOST` (optional) | `llama2` |
 | OpenAI-compatible | `OPENAI_API_BASE` + `OPENAI_API_KEY` | `gpt-3.5-turbo` |
-| [MiniMax](https://www.minimaxi.com) | `MINIMAX_API_KEY` | `MiniMax-M2.5` |
+| [MiniMax](https://www.minimaxi.com) | `MINIMAX_API_KEY` | `MiniMax-M2.7` |
 
 ```bash
 # MiniMax example — 204K context window, OpenAI-compatible
